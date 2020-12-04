@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://E:/Documents/GitHub/Packeteer/Packeteer.iml" filepath="E:/Documents/GitHub/Packeteer/Packeteer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/metransfert-client.iml" filepath="$PROJECT_DIR$/metransfert-client.iml" />
+      <module fileurl="file://E:/Documents/GitHub/metransfert-common/metransfert-common.iml" filepath="E:/Documents/GitHub/metransfert-common/metransfert-common.iml" />
+    </modules>
+  </component>
+</project>

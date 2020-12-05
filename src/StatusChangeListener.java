@@ -1,3 +1,10 @@
+enum Status{
+    TRYING,
+    CONNECTED,
+    DISCONNECTED,
+    TIMEOUT
+}
+
 public interface StatusChangeListener {
-    public void onStatusChange(boolean new_statue);
+    void onStatusChange(Status status);
 }

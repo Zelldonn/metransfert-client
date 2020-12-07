@@ -1,3 +1,8 @@
+package com.metransfert.client;
+
+import com.metransfert.client.transaction.RequestInfoResult;
+import com.metransfert.client.transaction.TransactionListener;
+import com.metransfert.client.transaction.TransferListener;
 import com.metransfert.common.MeTransfertPacketTypes;
 import com.packeteer.network.Packet;
 import com.packeteer.network.PacketBuilder;
@@ -13,7 +18,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 
-public class Client {
+public class Channel {
 
     private ArrayList<StatusChangeListener> statusChangeListeners =  new ArrayList<>();
 
@@ -31,8 +36,8 @@ public class Client {
 
     boolean inTransaction = false;
 
-    //TODO make it private
-    public void connect(){
+
+    private void connect(){
         for (StatusChangeListener listener : statusChangeListeners) {
             listener.onStatusChange(Status.TRYING);
         }
@@ -51,17 +56,37 @@ public class Client {
         }
     }
 
-    public Client(){
+    public void ping(){
 
     }
-    //TODO : Integrate Async code here
-    public void upload(Path file, TransferListener l) throws InterruptedException {
-        //TODO : check if l is not null, want to enable an upload without callback  ?
-        AsyncUpload au = new AsyncUpload(pis,pos, file);
 
-        au.addTransferUpdateListeners(l);
+    public Channel(){
+
+    }
+
+    public void upload(Path file, TransferListener l) {
+        //TODO : check if l is not null, want to enable an upload without callback  ?
+
+        connect();
+        //TODO : Integrate Async code here
+        AsyncUpload au = new AsyncUpload(pis, pos, file);
+
+        au.addTransferListeners(l);
 
         au.start();
+    }
+
+    public void download(String ID, Path downloadLocation, TransferListener l) throws IOException {
+        connect();
+
+        Packet p = PacketBuilder.newBuilder(MeTransfertPacketTypes.REQFILE).write(ID).build();
+        pos.writeAndFlush(p);
+
+        AsyncDownload ad = new AsyncDownload(pis, pos, downloadLocation);
+
+        ad.addTransferListeners(l);
+
+        ad.start();
     }
 
     public void requestInfo(String ID, TransactionListener l){
@@ -69,13 +94,15 @@ public class Client {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
+                connect();
                 try {
                     l.onTransactionStart();
                     Packet p = PacketBuilder.newBuilder(MeTransfertPacketTypes.REQINFO).write(ID).build();
                     pos.writeAndFlush(p);
 
+                    //TODO  : Check answer's integrity/validity
                     Packet answer = pis.readPacket();
-                    l.onTransactionFinish(new TransactionListener.TransactionResult(answer));
+                    l.onTransactionFinish(new RequestInfoResult(answer));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -85,6 +112,11 @@ public class Client {
     }
 
     //--------------Getters & Setters----------------\\
+    public void setAddress(String ip, int port){
+        setIp(ip);
+        setPort(port);
+    }
+
     public int getPort() {
         return port;
     }
@@ -94,10 +126,14 @@ public class Client {
     }
 
     public void setIp(String ip) {
+        if(ip == null)
+            throw new IllegalArgumentException("IP address cannot be null");
         this.ip = ip;
     }
 
     public void setPort(int port) {
-        this.port = port;
+        if(port > 0 && port < 65536)
+            this.port = port;
+        else throw new IllegalArgumentException("Port number must in the range [1 - 65535]");
     }
 }

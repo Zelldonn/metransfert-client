@@ -1,3 +1,5 @@
+package com.metransfert.client;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,7 +40,7 @@ public class AsyncDownload extends AsyncTransfer {
 		try{
 			PacketHeader header = in.readHeader();
 			
-			if(header.type != MeTransfertPacketTypes.FILE)
+			if(header.type != MeTransfertPacketTypes.FILEUPLOAD)
 				throw new RuntimeException("invalid packet type read by Async downloader");
 			
 			this.filename = in.readString();
@@ -52,8 +54,6 @@ public class AsyncDownload extends AsyncTransfer {
 				this.transferredBytes += count;
 			}
 			this.finished = true;
-			
-		
 			
 		}catch(IOException e){
 			e.printStackTrace();

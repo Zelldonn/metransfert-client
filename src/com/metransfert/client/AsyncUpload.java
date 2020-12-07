@@ -1,9 +1,13 @@
+package com.metransfert.client;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
+import com.metransfert.client.transaction.TransactionResult;
+import com.metransfert.client.transaction.TransferListener;
+import com.metransfert.client.transaction.UploadInfoResult;
 import com.metransfert.common.MeTransfertPacketTypes;
 import com.packeteer.network.*;
 
@@ -25,19 +29,21 @@ public class AsyncUpload extends AsyncTransfer {
 	
 	@Override
 	public void run(){
-		//Va
-		FileInputStream fis = null;
+
+		FileInputStream fis;
+
 		int oldTransferredBytes = 0;
-		
+
 		try{
 			File file = sourceFile.toFile();
-			int totalLen = (int) file.length();
 			fis = new FileInputStream(file);
-			
+
+			int totalLen = (int) file.length();
 			this.expectedBytes = totalLen;
+
 			String fileName = file.getName();
 			PacketHeader fileHeader = new PacketHeader( totalLen + PacketUtils.calculateNetworkStringLength(fileName) , 
-					MeTransfertPacketTypes.FILE);
+					MeTransfertPacketTypes.FILEUPLOAD);
 			out.writeAndFlush(fileHeader);
 			//send file name
 			out.writeAndFlush(fileName);
@@ -49,13 +55,11 @@ public class AsyncUpload extends AsyncTransfer {
 	            out.write(data, 0, count);
 	            out.flush();
 
-	            //TODO : fix "transferedBytes" being negative (while count is never)
-
 				this.transferredBytes += count;
 
 				if(transferredBytes != oldTransferredBytes){
-					for (TransferListener listener : transferListeners) {
-						listener.onTransferUpdate(new TransferListener.Info(expectedBytes, transferredBytes, throughput));
+					for (TransferListener listener : transferListeners){
+						listener.onTransferUpdate(new TransferListener.Info(expectedBytes, transferredBytes));
 					}
 				}
 				oldTransferredBytes = transferredBytes;
@@ -65,7 +69,7 @@ public class AsyncUpload extends AsyncTransfer {
 
 			Packet answer = in.readPacket();
 			for(TransferListener listener : transferListeners){
-				listener.onTransactionFinish(new TransactionListener.TransactionResult(answer));
+				listener.onTransactionFinish(new UploadInfoResult(answer));
 			}
 		}
 		catch(IOException e){

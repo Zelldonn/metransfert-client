@@ -1,9 +1,6 @@
-import com.packeteer.network.*;
+package com.metransfert.client;
 
 import java.io.*;
-import java.net.Socket;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) throws IOException {

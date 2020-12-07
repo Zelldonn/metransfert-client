@@ -1,3 +1,5 @@
+package com.metransfert.client;
+
 enum Status{
     TRYING,
     CONNECTED,

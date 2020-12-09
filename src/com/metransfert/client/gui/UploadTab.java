@@ -22,14 +22,15 @@ public class UploadTab extends JPanel implements ActionListener{
 
     private UploadPanel transaction;
 
-    private Channel mainChannel;
 
     private float oldTime;
 
     private JPanel panel;
 
-    public UploadTab(Channel c){
-        mainChannel = c;
+    private Channel channel;
+
+    public UploadTab(){
+        channel = new Channel();
         initComponents();
     }
 
@@ -74,7 +75,7 @@ public class UploadTab extends JPanel implements ActionListener{
 
                 Path p = Paths.get(pathTextField.getText());
                 oldTime = System.nanoTime();
-                mainChannel.upload(p, new TransferListener() {
+                channel.upload(p, new TransferListener() {
                     @Override
                     public void onTransactionStart() {
                         String fileName = Paths.get(pathTextField.getText()).getFileName().toString();

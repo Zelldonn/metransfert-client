@@ -1,9 +1,6 @@
 package com.metransfert.client.gui;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.awt.*;
 import java.awt.event.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -81,7 +78,10 @@ public class DownloadTab extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //TODO : check if directory is valid
-                downloadPanels.add(new DownloadPanel());
+                DownloadPanel p = new DownloadPanel();
+                downloadPanels.add(p);
+                panel.add(p);
+                refreshPanel();
             }
         });
 
@@ -89,5 +89,10 @@ public class DownloadTab extends JPanel {
         panel.add(saveDirectoryTextField);
         panel.add(idTextField);
         panel.add(downloadButton);
+    }
+
+    private void refreshPanel(){
+        revalidate();
+        repaint();
     }
 }

@@ -194,7 +194,7 @@ public class Gui extends JFrame implements ActionListener{
 
         tabbedPane = new JTabbedPane();
         tabbedPane.setTabLayoutPolicy(1);
-        tabbedPane.addTab("Upload", new UploadTab(mainChannel));
+        tabbedPane.addTab("Upload", new UploadTab());
         tabbedPane.addTab("Download", new DownloadTab());
         tabbedPane.setPreferredSize(this.getSize());
 

@@ -21,4 +21,5 @@ public class DownloadPanel extends JPanel{
         this.add(progressBar);
 
     }
+
 }

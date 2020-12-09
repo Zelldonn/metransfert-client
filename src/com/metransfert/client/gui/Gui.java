@@ -1,8 +1,8 @@
-package com.metransfert.client;
+package com.metransfert.client.gui;
 
+import com.metransfert.client.Channel;
 import com.metransfert.client.transaction.*;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -10,8 +10,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -20,10 +18,11 @@ import java.nio.file.Paths;
 public class Gui extends JFrame implements ActionListener{
 
     public class TransferPanel extends JPanel{
+        JProgressBar progressBar;
 
         TransferPanel(){
 
-            JProgressBar progressBar = new JProgressBar();
+            progressBar = new JProgressBar();
             progressBar.setValue(0);
             progressBar.setStringPainted(true);
 
@@ -31,15 +30,23 @@ public class Gui extends JFrame implements ActionListener{
 
             this.add(progressBar);
             this.add(throughput);
-            this.setVisible(false);
+        }
+        public void update(TransferListener.Info info){
+            int percentage = (int)(((double)info.transferredBytes/(double)info.expectedBytes)*100);
+            progressBar.setValue(percentage);
+            progressBar.setString("Downloading... " +percentage+" %");
 
+            float throughput = getThroughput(info.transferredBytes, info.oldTransferredBytes);
+
+            l_throughput.setText(byte2Readable(throughput) + "/s");
         }
     }
 
     public class RequestInfoButton extends JButton{
         Boolean canDownload;
         String fileName;
-        RequestInfoButton(){
+        RequestInfoButton(String title){
+            this.setText(title);
             setDownload(false);
             //Dont forrget to add actionlistener
         }
@@ -60,11 +67,13 @@ public class Gui extends JFrame implements ActionListener{
 
     Channel mainChannel;
 
+    private JPanel mainPanel;
     private final JPanel ID_Panel;
     private final JPanel transferPanel;
     private final JPanel bottomPanel;
 
-    private final JMenuItem m11;
+    private final JMenuItem changeAddressMenuItem;
+    private final JMenuItem connectMenuItem;
 
     private final JButton chooseFile_b;
     private final JTextField path_tf;
@@ -76,7 +85,6 @@ public class Gui extends JFrame implements ActionListener{
     private final JTextField generatedID;
     private final JButton copy_clipboard;
 
-    private final JButton requestIDInfo_b;
     private final JTextField requestID_tf;
 
     private final JLabel requestedInfo_l;
@@ -84,74 +92,68 @@ public class Gui extends JFrame implements ActionListener{
 
     private final RequestInfoButton requestInfo_b;
 
+    private float throughput = 0F;
+    private float oldTime = 0F;
+
+    private JLabel l_downloadConfirmed = new JLabel("");
+
+    JTabbedPane tabbedPane;
+
     public Gui(){
         //-------------------Define Frame properties---------------------\\
         this.setTitle("MeTransfer");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(450,300);
+        this.setSize(550,350);
         this.setMinimumSize(this.getSize());
-        Image img = Toolkit.getDefaultToolkit().getImage("img/logo.png");
-        this.setIconImage(img);
-        try {
-            bg = ImageIO.read(new File("img/back_ground.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        ImageIcon img = new ImageIcon("img/logo.png");
+        setIconImage(img.getImage());
 
         //Move focus to the next item (Avoid first button to be focused)
         setFocusable(true);
 
-        //Set Windows look
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-            e.printStackTrace();
-        }
-
         //--------Creating the panels and adding components------\\
         JPanel mainPanel = new JPanel();
-        mainPanel.setBackground(new Color(60, 63, 65));/*{
-            @Override
-            protected void paintComponent(Graphics g) {
-                g.drawImage(bg, 0, 0, getWidth(),getHeight(),this);
-            }
-        };*/
+
         JPanel uploadPanel = new JPanel();
-        uploadPanel.setBackground(new Color(60, 63, 65));
 
         bottomPanel = new JPanel();
-        bottomPanel.setBackground(new Color(60, 63, 65));
 
         transferPanel = new JPanel();
-        transferPanel.setBackground(new Color(60, 63, 65));
 
         ID_Panel = new JPanel();
-        ID_Panel.setBackground(new Color(60, 63, 65));
 
-
+        mainChannel = new Channel();
 
         //-------Creating the MenuBar and adding components------\\
-        JMenuBar mb = new JMenuBar();
-        JLabel label_address = new JLabel("Not Connected");
-        label_address.setForeground(Color.GRAY);
-        JMenu m1 = new JMenu("Server");
+        JMenuBar menuBar = new JMenuBar();
+        JLabel connectionStatusLabel = new JLabel("Not Connected");
+        connectionStatusLabel.setForeground(Color.GRAY);
+        JMenu serverMenu = new JMenu("Server");
         JMenu m2 = new JMenu("Client");
-        m11 = new JMenuItem("Change address");
-        m11.addActionListener(this);
+        changeAddressMenuItem = new JMenuItem("Change address");
+        changeAddressMenuItem.addActionListener(this);
 
-        mb.add(m1);
-        mb.add(m2);
-        m1.add(m11);
-        mb.add(label_address);
+        connectMenuItem = new JMenuItem("Connect");
+        connectMenuItem.addActionListener(this);
+
+        serverMenu.add(changeAddressMenuItem);
+        menuBar.add(serverMenu);
+        m2.add(connectMenuItem);
+        menuBar.add(m2);
+        menuBar.add(connectionStatusLabel);
+        setJMenuBar(menuBar);
 
         //--------------Generated ID TextField---------------\\
-        generatedID = new JTextField("Ax574", 4);
+        generatedID = new JTextField("", 4);
+        generatedID.setHorizontalAlignment(JTextField.CENTER);
         generatedID.setEditable(false);
+
 
         //-------------Copy to clipboard Button-------------\\
         Icon icon = new ImageIcon("img/clipboard.png");
-        img = ((ImageIcon) icon).getImage() ;
-        Image new_img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
+        Image img_ = ((ImageIcon) icon).getImage() ;
+        Image new_img = img_.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH) ;
         icon = new ImageIcon( new_img );
 
         copy_clipboard = new JButton(icon);
@@ -162,19 +164,17 @@ public class Gui extends JFrame implements ActionListener{
         chooseFile_b.addActionListener(this);
 
         //------------File path TextField-------------\\
-        path_tf = new JTextField(25);
+        path_tf = new JTextField(20);
         path_tf.setText("E:/Téléchargements/c.c");
         path_tf.setDragEnabled(true);
-        path_tf.setBackground(new Color(151, 151, 151));
 
         //----------------Paste-ID & Show File Area----------------\\
+        requestInfo_b = new RequestInfoButton("Show file");
+        requestInfo_b.addActionListener(this);
+
         requestedInfo_l = new JLabel("Enter ID");
         requestID_tf = new JTextField(8); //Display up to 8 characters
-
-
-        requestIDInfo_b = new JButton("Show file");
-        requestInfo_b = new RequestInfoButton();
-        requestInfo_b.addActionListener(this);
+        requestID_tf.getDocument().addDocumentListener(new MyDocumentListener(requestInfo_b));
 
         //Drag n Drop box ?
 
@@ -184,7 +184,7 @@ public class Gui extends JFrame implements ActionListener{
         pg.setStringPainted(true);
 
         //----------------Upload button-----------------\\
-        upload_b = new JButton("Upload file");
+        upload_b = new JButton("Generate ID");
         upload_b.addActionListener(this);
 
         //------------Throughput Label-----------------\\
@@ -192,80 +192,22 @@ public class Gui extends JFrame implements ActionListener{
 
         //Download button
 
-        // Components Added using Flow Layout
+        tabbedPane = new JTabbedPane();
+        tabbedPane.setTabLayoutPolicy(1);
+        tabbedPane.addTab("Upload", new UploadTab(mainChannel));
+        tabbedPane.addTab("Download", new DownloadTab());
+        tabbedPane.setPreferredSize(this.getSize());
 
-        bottomPanel.add(requestedInfo_l);
-        bottomPanel.add(requestID_tf);
-        bottomPanel.add(requestInfo_b);
+        mainPanel = new JPanel();
 
-        transferPanel.add(pg);
-        transferPanel.add(l_throughput);
-        transferPanel.setVisible(false);
+        mainPanel.add(tabbedPane);
 
-        uploadPanel.add(chooseFile_b);
-        uploadPanel.add(path_tf);
-        uploadPanel.add(upload_b);
+        setContentPane(mainPanel);
 
-        ID_Panel.add(generatedID);
-        ID_Panel.add(copy_clipboard);
-        ID_Panel.setVisible(false);
-
-        mainPanel.add(uploadPanel);
-        mainPanel.add(transferPanel);
-        mainPanel.add(ID_Panel);
-
-        //Adding Components to the frame.
-        this.getContentPane().add(BorderLayout.SOUTH, bottomPanel);
-        this.getContentPane().add(BorderLayout.PAGE_START, mb);
-        this.getContentPane().add(BorderLayout.CENTER, mainPanel);
-
-        //Extra important layout settings
-        this.setLocationRelativeTo(null);
-        this.setVisible(true);
-
-        this.addComponentListener(new ComponentListener() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                mainPanel.repaint();
-            }
-
-            @Override
-            public void componentMoved(ComponentEvent e) {
-
-            }
-
-            @Override
-            public void componentShown(ComponentEvent e) {
-
-            }
-
-            @Override
-            public void componentHidden(ComponentEvent e) {
-
-            }
-        });
-
-        mainChannel = new Channel();
-
-        mainChannel.addStatusChangeListeners(new_statue -> {
-            String status;
-
-            if(new_statue == Status.CONNECTED){
-                status = "Connected";
-                label_address.setForeground(new Color(89, 160, 66));
-            } else if(new_statue == Status.TRYING){
-                status = "Trying to connect";
-                label_address.setForeground(new Color(212, 63, 35));
-            }else if(new_statue == Status.TIMEOUT){
-                status = "Timeout";
-                label_address.setForeground(new Color(205, 25, 25));
-            }else
-                status = "UNSPECIFIED ERROR";
-
-            String address = mainChannel.getIp() + ":" + mainChannel.getPort();
-
-            label_address.setText(status + " : " + address);
-        });
+        String status = "Connected";
+        String address = mainChannel.getIp() + ":" + mainChannel.getPort();
+        connectionStatusLabel.setText(status + " : " + address);
+        connectionStatusLabel.setForeground(new Color(89, 160, 66));
     }
 
     @Override
@@ -283,9 +225,11 @@ public class Gui extends JFrame implements ActionListener{
         else if(e.getSource() == upload_b){
             if(isFile(path_tf.getText())){
                 Path p = Paths.get(path_tf.getText());
+                oldTime = System.nanoTime();
                 mainChannel.upload(p, new TransferListener() {
                     @Override
                     public void onTransactionStart() {
+                        path_tf.setText("Let's upload again !");
                     }
 
                     @Override
@@ -305,7 +249,8 @@ public class Gui extends JFrame implements ActionListener{
                         pg.setValue(percentage);
                         pg.setString("Uploading... " +percentage+" %");
 
-                        float throughput = 528_152F;
+                        float throughput = getThroughput(info.transferredBytes, info.oldTransferredBytes);
+
                         l_throughput.setText(byte2Readable(throughput) + "/s");
                     }
                 });
@@ -315,39 +260,45 @@ public class Gui extends JFrame implements ActionListener{
         }
         else if(e.getSource() == requestInfo_b){
             if(requestInfo_b.canDownload){
-                //Open path dialogue
-                String filename = requestInfo_b.fileName;
+                //Opening file chooser
                 JFileChooser fc = new JFileChooser();
                 fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 int i = fc.showOpenDialog(this);
                 Path downloadPath = null;
+
                 if(i == JFileChooser.APPROVE_OPTION){
+                    String filename = requestInfo_b.fileName;
                     String temp = fc.getSelectedFile().toPath().toString() + "/" + filename;
                     downloadPath = Paths.get(temp) ;
+                    try {
+                        TransferPanel dl = new TransferPanel();
+                        bottomPanel.add(dl);
+                        String id = requestID_tf.getText();
+                        Path finalDownloadPath = downloadPath;
+                        mainChannel.download(id, downloadPath, new TransferListener() {
+                            @Override
+                            public void onTransferUpdate(Info info) {
+                                dl.update(info);
+                            }
+
+                            @Override
+                            public void onTransactionStart() {
+                            bottomPanel.remove(l_downloadConfirmed);
+                            }
+
+                            @Override
+                            public void onTransactionFinish(TransactionResult result) {
+                                bottomPanel.remove(dl);
+                                l_downloadConfirmed.setText("File saved in : " + finalDownloadPath.toString());
+                                l_downloadConfirmed.setBackground(Color.white);
+                                bottomPanel.add(l_downloadConfirmed);
+                            }
+                        });
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
                 }
-                try {
-                    TransferPanel dl = new TransferPanel();
-                    bottomPanel.add(dl);
-                    String id = requestID_tf.getText();
-                    mainChannel.download(id, downloadPath, new TransferListener() {
-                        @Override
-                        public void onTransferUpdate(Info info) {
 
-                        }
-
-                        @Override
-                        public void onTransactionStart() {
-
-                        }
-
-                        @Override
-                        public void onTransactionFinish(TransactionResult result) {
-
-                        }
-                    });
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
             }
             else {
                 String id = requestID_tf.getText();
@@ -376,7 +327,7 @@ public class Gui extends JFrame implements ActionListener{
                 });
             }
         }
-        else if(e.getSource() == m11){
+        else if(e.getSource() == changeAddressMenuItem){
             ChangeAddressPopUp p = new ChangeAddressPopUp();
             mainChannel.setAddress(p.ip, p._port);
             //TODO : make a ping request to update status in GUI
@@ -387,14 +338,17 @@ public class Gui extends JFrame implements ActionListener{
     }
 
     //TODO : make this fck thing working
-    /*private float calculateThroughput(){
+    private float getThroughput(int transferredBytes, int oldTransferredBytes){
         float timeNow = System.nanoTime();
-        float delta = (timeNow - time);
-        throughput = ((float)transferredBytes - (float)oldTransferredBytes) / (delta / 1_000_000_000F);
-        time = timeNow;
+        float delta = (timeNow - oldTime);
+        float temp = ((float)transferredBytes - (float)oldTransferredBytes) / (delta / 10_000_000_000F);
+        if(temp < 100000000F)
+            throughput = temp;
 
-        System.out.println(throughput);
-    }*/
+        oldTime = timeNow;
+
+        return throughput;
+    }
 
     //TODO: reload ID in memory after crash
     private boolean isFile(String path){
@@ -403,7 +357,7 @@ public class Gui extends JFrame implements ActionListener{
     }
 
     /**
-     * Converts byte to string with appropriate unit  * @param throughput
+     * Converts byte to string with appropriate unit  * @param byte
      * @return
      */
     private String byte2Readable(float _byte){
@@ -415,8 +369,9 @@ public class Gui extends JFrame implements ActionListener{
         else if(_byte < mebibyte * 1024F){
             s = String.format("%.2f",_byte/mebibyte) + " MB";
         }else if(_byte < mebibyte * mebibyte){
-            s = String.format("%.2f",_byte/(mebibyte * mebibyte)) + " GB";
+            s = String.format("%.2f",_byte/(mebibyte * 1024F)) + " GB";
         }
+
         return s;
     }
 
@@ -434,7 +389,6 @@ public class Gui extends JFrame implements ActionListener{
 
             int option = JOptionPane.showConfirmDialog(null, message, "Change address", JOptionPane.OK_CANCEL_OPTION);
             if (option == JOptionPane.OK_OPTION) {
-                //TODO: check if address and port may be valid
                 ip = address.getText();
                 _port = Integer.parseInt(port.getText());
             }

@@ -9,5 +9,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Packeteer" />
     <orderEntry type="module" module-name="metransfert-common" />
+    <orderEntry type="library" name="com.formdev:flatlaf:0.44" level="project" />
   </component>
 </module>

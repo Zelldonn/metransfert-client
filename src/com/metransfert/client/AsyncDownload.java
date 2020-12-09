@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import com.metransfert.common.MeTransfertPacketTypes;
+import com.metransfert.client.transaction.TransactionResult;
+import com.metransfert.client.transaction.TransferListener;
+import com.metransfert.common.PacketTypes;
 import com.packeteer.network.PacketHeader;
 import com.packeteer.network.PacketInputStream;
 import com.packeteer.network.PacketOutputStream;
@@ -36,11 +38,12 @@ public class AsyncDownload extends AsyncTransfer {
 	
 	@Override
 	public void run() {
+		int oldTransferredBytes = 0;
 		FileOutputStream fos = null;
 		try{
 			PacketHeader header = in.readHeader();
 			
-			if(header.type != MeTransfertPacketTypes.FILEUPLOAD)
+			if(header.type != PacketTypes.FILEUPLOAD)
 				throw new RuntimeException("invalid packet type read by Async downloader");
 			
 			this.filename = in.readString();
@@ -52,9 +55,17 @@ public class AsyncDownload extends AsyncTransfer {
 			while( (count = in.read(buffer)) > 0 ){
 				fos.write(buffer, 0, count);				
 				this.transferredBytes += count;
+				if(transferredBytes != oldTransferredBytes){
+					for (TransferListener listener : transferListeners){
+						listener.onTransferUpdate(new TransferListener.Info(expectedBytes, transferredBytes, oldTransferredBytes));
+					}
+				}
+				oldTransferredBytes = transferredBytes;
 			}
 			this.finished = true;
-			
+			for (TransferListener listener : transferListeners){
+				listener.onTransactionFinish(new TransactionResult(null));
+			}
 		}catch(IOException e){
 			e.printStackTrace();
 		}

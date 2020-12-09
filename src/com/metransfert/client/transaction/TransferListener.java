@@ -4,12 +4,12 @@ public interface TransferListener extends TransactionListener{
 
     void onTransferUpdate(Info info);
     class Info{
-        public final int expectedBytes;
-        public final int transferredBytes;
+        public final int expectedBytes, transferredBytes, oldTransferredBytes;
 
-        public Info(int expectedBytes, int transferredBytes) {
+        public Info(int expectedBytes, int transferredBytes, int oldTransferredBytes) {
             this.expectedBytes = expectedBytes;
             this.transferredBytes = transferredBytes;
+            this.oldTransferredBytes = oldTransferredBytes;
         }
     }
 }

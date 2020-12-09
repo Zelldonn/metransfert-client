@@ -1,7 +1,7 @@
 package com.metransfert.client.transaction;
 
-import com.metransfert.common.MeTransfertErrorTypes;
-import com.metransfert.common.MeTransfertPacketTypes;
+import com.metransfert.common.ErrorTypes;
+import com.metransfert.common.PacketTypes;
 import com.packeteer.network.Packet;
 import com.packeteer.network.PacketUtils;
 
@@ -19,9 +19,9 @@ public class RequestInfoResult extends TransactionResult {
         //Check header type
         byte type = p.getType();
         System.out.println(type);
-        if(type == MeTransfertPacketTypes.ERROR){
+        if(type == PacketTypes.ERROR){
             byte errorType = bf.get();
-            if(errorType == MeTransfertErrorTypes.FILE_DOES_NOT_EXIST){
+            if(errorType == ErrorTypes.FILE_DOES_NOT_EXIST){
                 id_exists = false;
             }
         }else{

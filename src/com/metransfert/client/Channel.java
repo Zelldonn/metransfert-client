@@ -3,7 +3,7 @@ package com.metransfert.client;
 import com.metransfert.client.transaction.RequestInfoResult;
 import com.metransfert.client.transaction.TransactionListener;
 import com.metransfert.client.transaction.TransferListener;
-import com.metransfert.common.MeTransfertPacketTypes;
+import com.metransfert.common.PacketTypes;
 import com.packeteer.network.Packet;
 import com.packeteer.network.PacketBuilder;
 import com.packeteer.network.PacketInputStream;
@@ -20,12 +20,6 @@ import java.util.ArrayList;
 
 public class Channel {
 
-    private ArrayList<StatusChangeListener> statusChangeListeners =  new ArrayList<>();
-
-    public void addStatusChangeListeners(StatusChangeListener newListener) {
-        statusChangeListeners.add(newListener);
-    }
-
     //TODO : make it not hard coded
     String ip = "dkkp.ddns.net";
     int port = 7999;
@@ -38,20 +32,12 @@ public class Channel {
 
 
     private void connect(){
-        for (StatusChangeListener listener : statusChangeListeners) {
-            listener.onStatusChange(Status.TRYING);
-        }
+
         try {
             soc = new Socket(ip, port);
             pis =  new PacketInputStream(new BufferedInputStream(soc.getInputStream()));
             pos =  new PacketOutputStream(soc.getOutputStream());
-            for (StatusChangeListener listener : statusChangeListeners) {
-                listener.onStatusChange(Status.CONNECTED);
-            }
         } catch (IOException e) {
-            for (StatusChangeListener listener : statusChangeListeners) {
-                listener.onStatusChange(Status.TIMEOUT);
-            }
             e.printStackTrace();
         }
     }
@@ -79,7 +65,7 @@ public class Channel {
     public void download(String ID, Path downloadLocation, TransferListener l) throws IOException {
         connect();
 
-        Packet p = PacketBuilder.newBuilder(MeTransfertPacketTypes.REQFILE).write(ID).build();
+        Packet p = PacketBuilder.newBuilder(PacketTypes.REQFILE).write(ID).build();
         pos.writeAndFlush(p);
 
         AsyncDownload ad = new AsyncDownload(pis, pos, downloadLocation);
@@ -97,7 +83,7 @@ public class Channel {
                 connect();
                 try {
                     l.onTransactionStart();
-                    Packet p = PacketBuilder.newBuilder(MeTransfertPacketTypes.REQINFO).write(ID).build();
+                    Packet p = PacketBuilder.newBuilder(PacketTypes.REQINFO).write(ID).build();
                     pos.writeAndFlush(p);
 
                     //TODO  : Check answer's integrity/validity

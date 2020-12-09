@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="metransfert-client:jar2">
+    <output-path>$PROJECT_DIR$/out/artifacts/metransfert_client_jar2</output-path>
+    <root id="archive" name="metransfert-client.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="Packeteer" />
+      <element id="module-output" name="metransfert-client" />
+      <element id="module-output" name="metransfert-common" />
+      <element id="library" level="project" name="com.formdev:flatlaf:0.44" />
+    </root>
+  </artifact>
+</component>

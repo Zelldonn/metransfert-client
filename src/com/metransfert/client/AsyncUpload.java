@@ -5,10 +5,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import com.metransfert.client.transaction.TransactionResult;
 import com.metransfert.client.transaction.TransferListener;
 import com.metransfert.client.transaction.UploadInfoResult;
-import com.metransfert.common.MeTransfertPacketTypes;
+import com.metransfert.common.PacketTypes;
 import com.packeteer.network.*;
 
 public class AsyncUpload extends AsyncTransfer {
@@ -35,6 +34,10 @@ public class AsyncUpload extends AsyncTransfer {
 		int oldTransferredBytes = 0;
 
 		try{
+			for(TransferListener listener : transferListeners){
+				listener.onTransactionStart();
+			}
+
 			File file = sourceFile.toFile();
 			fis = new FileInputStream(file);
 
@@ -43,7 +46,7 @@ public class AsyncUpload extends AsyncTransfer {
 
 			String fileName = file.getName();
 			PacketHeader fileHeader = new PacketHeader( totalLen + PacketUtils.calculateNetworkStringLength(fileName) , 
-					MeTransfertPacketTypes.FILEUPLOAD);
+					PacketTypes.FILEUPLOAD);
 			out.writeAndFlush(fileHeader);
 			//send file name
 			out.writeAndFlush(fileName);
@@ -59,7 +62,7 @@ public class AsyncUpload extends AsyncTransfer {
 
 				if(transferredBytes != oldTransferredBytes){
 					for (TransferListener listener : transferListeners){
-						listener.onTransferUpdate(new TransferListener.Info(expectedBytes, transferredBytes));
+						listener.onTransferUpdate(new TransferListener.Info(expectedBytes, transferredBytes, oldTransferredBytes));
 					}
 				}
 				oldTransferredBytes = transferredBytes;

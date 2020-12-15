@@ -1,6 +1,6 @@
-package com.metransfert.client.gui;
+package com.metransfert.client;
 
-enum Status {
+public enum Status {
     TRYING,
     CONNECTED,
     DISCONNECTED,

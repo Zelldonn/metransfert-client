@@ -7,6 +7,7 @@ import java.nio.file.Path;
 
 import com.metransfert.client.transaction.TransferListener;
 import com.metransfert.client.transaction.UploadInfoResult;
+import com.metransfert.common.ErrorTypes;
 import com.metransfert.common.PacketTypes;
 import com.packeteer.network.*;
 
@@ -15,6 +16,8 @@ public class AsyncUpload extends AsyncTransfer {
 	private final int BLOCK_SIZE = 10*1024;
 	
 	private Path sourceFile;
+
+	private long oldTime;
 	
 	public AsyncUpload(PacketInputStream pis, PacketOutputStream pos, Path sourceFile) {
 		super(pis, pos);
@@ -32,6 +35,8 @@ public class AsyncUpload extends AsyncTransfer {
 		FileInputStream fis;
 
 		int oldTransferredBytes = 0;
+
+		oldTime = System.currentTimeMillis();
 
 		try{
 			for(TransferListener listener : transferListeners){
@@ -60,20 +65,41 @@ public class AsyncUpload extends AsyncTransfer {
 
 				this.transferredBytes += count;
 
-				if(transferredBytes != oldTransferredBytes){
+				if(transferredBytes != oldTransferredBytes && (System.currentTimeMillis() - 1000L) >= oldTime){
 					for (TransferListener listener : transferListeners){
 						listener.onTransferUpdate(new TransferListener.Info(expectedBytes, transferredBytes, oldTransferredBytes));
 					}
+					oldTime = System.currentTimeMillis();
+					oldTransferredBytes = transferredBytes;
 				}
-				oldTransferredBytes = transferredBytes;
 	        }
 	        this.finished = true;
 	        fis.close(); //TODO close file stream in "finally" clause
 
 			Packet answer = in.readPacket();
-			for(TransferListener listener : transferListeners){
-				listener.onTransactionFinish(new UploadInfoResult(answer));
+
+			//trigger if invalid file name or
+
+			byte answerType = answer.getType();
+
+			//TODO handle errors with flags
+			if(answerType == PacketTypes.ERROR){
+				byte errorType = answer.getPayloadBuffer().get();
+				if(errorType == ErrorTypes.SERVER_ERROR){
+
+				}else if(errorType == ErrorTypes.INVALID_FILENAME){
+
+				}else{
+					//Does not follow standard error procedure in upload result context
+				}
+			}else if(answerType == PacketTypes.UPLOADRESULT){
+				for(TransferListener listener : transferListeners){
+					listener.onTransactionFinish(new UploadInfoResult(answer));
+				}
+			}else{
+				//Does not follow standard procedure at all
 			}
+
 		}
 		catch(IOException e){
 			//throw e;

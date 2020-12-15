@@ -19,6 +19,8 @@ public class AsyncDownload extends AsyncTransfer {
 	
 	private Path downloadedFile = null;
 	private String filename = null;
+
+	private long oldTime;
 	
 	/**
 	 * 
@@ -39,6 +41,8 @@ public class AsyncDownload extends AsyncTransfer {
 	@Override
 	public void run() {
 		int oldTransferredBytes = 0;
+		oldTime = System.currentTimeMillis();
+
 		FileOutputStream fos = null;
 		try{
 			PacketHeader header = in.readHeader();
@@ -52,15 +56,20 @@ public class AsyncDownload extends AsyncTransfer {
 			this.expectedBytes = fileLen;
 			byte[] buffer = new byte[BLOCK_SIZE];
 			int count=0;
+			for (TransferListener listener : transferListeners){
+				listener.onTransactionStart();
+			}
 			while( (count = in.read(buffer)) > 0 ){
 				fos.write(buffer, 0, count);				
 				this.transferredBytes += count;
-				if(transferredBytes != oldTransferredBytes){
+				if(transferredBytes != oldTransferredBytes && (System.currentTimeMillis() - 1000L) >= oldTime){
 					for (TransferListener listener : transferListeners){
 						listener.onTransferUpdate(new TransferListener.Info(expectedBytes, transferredBytes, oldTransferredBytes));
 					}
+					oldTime = System.currentTimeMillis();
+					oldTransferredBytes = transferredBytes;
 				}
-				oldTransferredBytes = transferredBytes;
+
 			}
 			this.finished = true;
 			for (TransferListener listener : transferListeners){

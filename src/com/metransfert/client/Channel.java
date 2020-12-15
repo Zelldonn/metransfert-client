@@ -1,38 +1,37 @@
 package com.metransfert.client;
 
-import com.metransfert.client.transaction.RequestInfoResult;
-import com.metransfert.client.transaction.TransactionListener;
-import com.metransfert.client.transaction.TransferListener;
+import com.metransfert.client.transaction.*;
 import com.metransfert.common.PacketTypes;
-import com.packeteer.network.Packet;
-import com.packeteer.network.PacketBuilder;
-import com.packeteer.network.PacketInputStream;
-import com.packeteer.network.PacketOutputStream;
+import com.packeteer.network.*;
 
 import java.io.BufferedInputStream;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Path;
-
 import java.util.ArrayList;
-
 
 public class Channel {
 
-    //TODO : make it not hard coded
-    String ip = "dkkp.ddns.net";
-    int port = 7999;
+    public ArrayList<PingListener> pingListeners = new ArrayList<>();
+
+    public void addPingListeners(PingListener newListener){
+        pingListeners.add(newListener);
+    }
+
+    final String ip;
+    final int port ;
 
     Socket soc = null;
     PacketInputStream pis = null;
     PacketOutputStream pos = null;
 
-    boolean inTransaction = false;
-
+    public Channel(String ip, int port) {
+        this.ip = ip;
+        this.port = port;
+    }
 
     private void connect(){
-
         try {
             soc = new Socket(ip, port);
             pis =  new PacketInputStream(new BufferedInputStream(soc.getInputStream()));
@@ -43,11 +42,35 @@ public class Channel {
     }
 
     public void ping(){
-
-    }
-
-    public Channel(){
-
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for(PingListener l : pingListeners){
+                    l.onStatusChanged(Status.TRYING);
+                }
+                try {
+                    connect();
+                    Packet p = PacketBuilder.newBuilder(PacketTypes.PING).build();
+                    pos.writeAndFlush(p);
+                    Packet pong = pis.readPacket();
+                    if(pong.getType() == PacketTypes.PONG){
+                        for(PingListener l : pingListeners){
+                            l.onStatusChanged(Status.CONNECTED);
+                        }
+                    }else{
+                        for(PingListener l : pingListeners){
+                            l.onStatusChanged(Status.DISCONNECTED);
+                        }
+                    }
+                } catch (IOException e) {
+                    for(PingListener l : pingListeners){
+                        l.onStatusChanged(Status.TIMEOUT);
+                    }
+                    e.printStackTrace();
+                }
+            }
+        });
+        t.start();
     }
 
     public void upload(Path file, TransferListener l) {
@@ -97,29 +120,11 @@ public class Channel {
         t.start();
     }
 
-    //--------------Getters & Setters----------------\\
-    public void setAddress(String ip, int port){
-        setIp(ip);
-        setPort(port);
-    }
-
     public int getPort() {
         return port;
     }
 
     public String getIp() {
         return ip;
-    }
-
-    public void setIp(String ip) {
-        if(ip == null)
-            throw new IllegalArgumentException("IP address cannot be null");
-        this.ip = ip;
-    }
-
-    public void setPort(int port) {
-        if(port > 0 && port < 65536)
-            this.port = port;
-        else throw new IllegalArgumentException("Port number must in the range [1 - 65535]");
     }
 }

@@ -14,6 +14,7 @@ public class RightClickPopUp extends JPopupMenu {
 
     private String clipBoardContent;
     public RightClickPopUp() {
+        System.out.println("test");
         anItem = new JMenuItem("Paste");
         anItem.addMouseListener(new MouseAdapter() {
             @Override
@@ -30,17 +31,11 @@ public class RightClickPopUp extends JPopupMenu {
     public static String getClipBoard(){
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         String s = "";
-
         try {
             s =  clipboard.getData(DataFlavor.stringFlavor).toString();
-        } catch (UnsupportedFlavorException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (UnsupportedFlavorException | IOException e) {
             e.printStackTrace();
         }
         return s;
-    }
-    public String getClipBoardContent() {
-        return clipBoardContent;
     }
 }

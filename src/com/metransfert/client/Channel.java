@@ -37,7 +37,7 @@ public class Channel {
             pis =  new PacketInputStream(new BufferedInputStream(soc.getInputStream()));
             pos =  new PacketOutputStream(soc.getOutputStream());
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Cannot create new socket");
         }
     }
 
@@ -48,25 +48,30 @@ public class Channel {
                 for(PingListener l : pingListeners){
                     l.onStatusChanged(Status.TRYING);
                 }
-                try {
-                    connect();
-                    Packet p = PacketBuilder.newBuilder(PacketTypes.PING).build();
-                    pos.writeAndFlush(p);
-                    Packet pong = pis.readPacket();
-                    if(pong.getType() == PacketTypes.PONG){
-                        for(PingListener l : pingListeners){
-                            l.onStatusChanged(Status.CONNECTED);
+                connect();
+                if(pos == null){
+                    System.out.println("Ping is not possible : Packet output stream is null");
+                }
+                else{
+                    try {
+                        Packet p = PacketBuilder.newBuilder(PacketTypes.PING).build();
+                        pos.writeAndFlush(p);
+                        Packet pong = pis.readPacket();
+                        if(pong.getType() == PacketTypes.PONG){
+                            for(PingListener l : pingListeners){
+                                l.onStatusChanged(Status.CONNECTED);
+                            }
+                        }else{
+                            for(PingListener l : pingListeners){
+                                l.onStatusChanged(Status.DISCONNECTED);
+                            }
                         }
-                    }else{
+                    } catch (IOException e) {
                         for(PingListener l : pingListeners){
-                            l.onStatusChanged(Status.DISCONNECTED);
+                            l.onStatusChanged(Status.TIMEOUT);
                         }
+                        e.printStackTrace();
                     }
-                } catch (IOException e) {
-                    for(PingListener l : pingListeners){
-                        l.onStatusChanged(Status.TIMEOUT);
-                    }
-                    e.printStackTrace();
                 }
             }
         });
@@ -75,7 +80,6 @@ public class Channel {
 
     public void upload(Path file, TransferListener l) {
         //TODO : check if l is not null, want to enable an upload without callback  ?
-
         connect();
         //TODO : Integrate Async code here
         AsyncUpload au = new AsyncUpload(pis, pos, file);

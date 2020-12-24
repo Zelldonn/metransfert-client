@@ -1,11 +1,15 @@
 package com.metransfert.client;
 
-import com.metransfert.client.transaction.*;
+import com.metransfert.client.transaction.AsyncDownload;
+import com.metransfert.client.transaction.AsyncUpload;
+import com.metransfert.client.transaction.UploadPaths;
+import com.metransfert.client.transactionhandlers.*;
 import com.metransfert.common.PacketTypes;
 import com.packeteer.network.*;
 
 import java.io.BufferedInputStream;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -35,7 +39,7 @@ public class Channel {
         try {
             soc = new Socket(ip, port);
             pis =  new PacketInputStream(new BufferedInputStream(soc.getInputStream()));
-            pos =  new PacketOutputStream(soc.getOutputStream());
+            pos =  new PacketOutputStream(new BufferedOutputStream(soc.getOutputStream()));
         } catch (IOException e) {
             System.out.println("Cannot create new socket");
         }
@@ -51,6 +55,9 @@ public class Channel {
                 connect();
                 if(pos == null){
                     System.out.println("Ping is not possible : Packet output stream is null");
+                    for(PingListener l : pingListeners){
+                        l.onStatusChanged(Status.DISCONNECTED);
+                    }
                 }
                 else{
                     try {
@@ -87,6 +94,18 @@ public class Channel {
         au.addTransferListeners(l);
 
         au.start();
+    }
+
+    public void pathUpload(ArrayList path, TransferListener l) throws IOException {
+        connect();
+        Packet p = PacketBuilder.newBuilder(PacketTypes.PATHUPLOAD).build();
+        pos.writeAndFlush(p);
+
+        UploadPaths up = new UploadPaths(path, soc);
+
+        up.addTransferListeners(l);
+
+        up.start();
     }
 
     public void download(String ID, Path downloadLocation, TransferListener l) throws IOException {

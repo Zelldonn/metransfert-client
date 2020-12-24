@@ -1,4 +1,4 @@
-package com.metransfert.client.transaction;
+package com.metransfert.client.transactionhandlers;
 
 import com.metransfert.common.ErrorTypes;
 import com.metransfert.common.PacketTypes;

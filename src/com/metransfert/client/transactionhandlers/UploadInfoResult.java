@@ -1,4 +1,4 @@
-package com.metransfert.client.transaction;
+package com.metransfert.client.transactionhandlers;
 
 import com.packeteer.network.Packet;
 import com.packeteer.network.PacketUtils;

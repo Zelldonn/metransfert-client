@@ -1,11 +1,10 @@
 package com.metransfert.client;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.metransfert.client.gui.Gui;
+import com.metransfert.client.controller.ClientController;
+import com.metransfert.client.gui.GUI;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.*;
 
 public class Main {
@@ -21,11 +20,15 @@ public class Main {
         JFrame.setDefaultLookAndFeelDecorated(true);
         JDialog.setDefaultLookAndFeelDecorated(true);
 
-        Gui gui = new Gui();
+        GUI gui = new GUI();
 
         gui.setLocationRelativeTo(null);
         gui.setVisible(true);
         gui.pack();
 
+        Channel c = new Channel("metransfer.ddns.net", 7999);
+
+        ClientController clientController = new ClientController(gui, c);
+        clientController.populateDefaultAddresses();
     }
 }

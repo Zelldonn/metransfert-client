@@ -1,4 +1,4 @@
-package com.metransfert.client.transaction;
+package com.metransfert.client.transactionhandlers;
 
 public interface TransactionListener {
     void onTransactionStart();

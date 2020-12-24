@@ -1,10 +1,11 @@
 package com.metransfert.client.gui;
 
 import com.metransfert.client.Channel;
-import com.metransfert.client.transaction.RequestInfoResult;
-import com.metransfert.client.transaction.TransactionListener;
-import com.metransfert.client.transaction.TransactionResult;
-import com.metransfert.client.transaction.TransferListener;
+import com.metransfert.client.controller.ClientController;
+import com.metransfert.client.transactionhandlers.RequestInfoResult;
+import com.metransfert.client.transactionhandlers.TransactionListener;
+import com.metransfert.client.transactionhandlers.TransactionResult;
+import com.metransfert.client.transactionhandlers.TransferListener;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -96,7 +97,7 @@ public class DownloadTab extends JPanel {
 
         downloadButton = new DownloadButton("Show");
         downloadButton.addActionListener(e -> {
-            Gui g = Gui.getInstance();
+            ClientController g = ClientController.getInstance();
             Channel c = new Channel(g.getIp(), g.getPort());
             channels.add(c);
 
@@ -117,11 +118,10 @@ public class DownloadTab extends JPanel {
                         if(!infoResult.id_exists)
                             display = "File does not exist";
                         else{
-                            display = infoResult.fileName + " | " + byte2Readable(infoResult.fileSize);
+                            display = infoResult.fileName + " | " + GuiUtils.byte2Readable(infoResult.fileSize);
                             downloadButton.setDownload(true);
                             downloadButton.setFileName(infoResult.fileName);
                         }
-
                         fileInfoLabel.setText(display);
                     }
                 });
@@ -189,17 +189,4 @@ public class DownloadTab extends JPanel {
         return file.isDirectory();
     }
 
-    private String byte2Readable(float _byte){
-        String s = "";
-        float mebibyte = 1_048_576F;
-
-        if(_byte < mebibyte)
-            s = String.format("%.2f",_byte/1024F) + " kB";
-        else if(_byte < mebibyte * 1024F){
-            s = String.format("%.2f",_byte/mebibyte) + " MB";
-        }else if(_byte < mebibyte * mebibyte){
-            s = String.format("%.2f",_byte/(mebibyte * 1024F)) + " GB";
-        }
-        return s;
-    }
 }

@@ -1,6 +1,6 @@
 package com.metransfert.client.gui;
 
-import com.metransfert.client.transaction.TransferListener;
+import com.metransfert.client.transactionhandlers.TransferListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -123,7 +123,7 @@ public class UploadPanel extends JPanel {
         progressBar.setString("Uploading... " +percentage+" % " + "("+throughputString+")");
     }
 
-    private long getThroughput(int currentBytes, int lastBytes){
+    private long getThroughput(long currentBytes, long lastBytes){
         long currentNano = System.nanoTime();
         long dB = (long)currentBytes - (long)lastBytes;
         long dt = currentNano - lastNano;

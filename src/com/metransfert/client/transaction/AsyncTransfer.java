@@ -1,6 +1,6 @@
-package com.metransfert.client;
+package com.metransfert.client.transaction;
 
-import com.metransfert.client.transaction.TransferListener;
+import com.metransfert.client.transactionhandlers.TransferListener;
 import com.packeteer.network.PacketInputStream;
 import com.packeteer.network.PacketOutputStream;
 
@@ -19,19 +19,19 @@ public class AsyncTransfer extends Thread {
 	protected boolean finished = false;
 		
 	protected float throughput = 0.0f;
-	protected int expectedBytes = 0;
-	protected int transferredBytes = 0;
+	protected long expectedBytes = 0;
+	protected long transferredBytes = 0;
 	
 	protected AsyncTransfer(PacketInputStream pis, PacketOutputStream pos){
 		in = pis;
 		out = pos;
 	}
 	
-	public int expectedBytes(){
+	public long expectedBytes(){
 		return this.expectedBytes;
 	}
 	
-	public int transferredBytes(){
+	public long transferredBytes(){
 		return this.transferredBytes;
 	}
 	
@@ -42,4 +42,6 @@ public class AsyncTransfer extends Thread {
 	public boolean isFinished(){
 		return this.finished;
 	}
+
+
 }

@@ -1,12 +1,12 @@
-package com.metransfert.client;
+package com.metransfert.client.transaction;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import com.metransfert.client.transaction.TransactionResult;
-import com.metransfert.client.transaction.TransferListener;
+import com.metransfert.client.transactionhandlers.TransactionResult;
+import com.metransfert.client.transactionhandlers.TransferListener;
 import com.metransfert.common.PacketTypes;
 import com.packeteer.network.PacketHeader;
 import com.packeteer.network.PacketInputStream;
@@ -40,7 +40,7 @@ public class AsyncDownload extends AsyncTransfer {
 	
 	@Override
 	public void run() {
-		int oldTransferredBytes = 0;
+		long oldTransferredBytes = 0;
 		oldTime = System.currentTimeMillis();
 
 		FileOutputStream fos = null;
@@ -52,7 +52,7 @@ public class AsyncDownload extends AsyncTransfer {
 			
 			this.filename = in.readString();
 			fos = new FileOutputStream(downloadedFile.toFile());
-			int fileLen = header.payloadLength - PacketUtils.calculateNetworkStringLength(filename);
+			long fileLen = header.payloadLength - PacketUtils.calculateNetworkStringLength(filename);
 			this.expectedBytes = fileLen;
 			byte[] buffer = new byte[BLOCK_SIZE];
 			int count=0;

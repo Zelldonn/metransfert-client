@@ -1,12 +1,12 @@
-package com.metransfert.client;
+package com.metransfert.client.transaction;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import com.metransfert.client.transaction.TransferListener;
-import com.metransfert.client.transaction.UploadInfoResult;
+import com.metransfert.client.transactionhandlers.TransferListener;
+import com.metransfert.client.transactionhandlers.UploadInfoResult;
 import com.metransfert.common.ErrorTypes;
 import com.metransfert.common.PacketTypes;
 import com.packeteer.network.*;
@@ -34,7 +34,7 @@ public class AsyncUpload extends AsyncTransfer {
 
 		FileInputStream fis;
 
-		int oldTransferredBytes = 0;
+		long oldTransferredBytes = 0;
 
 		oldTime = System.currentTimeMillis();
 
@@ -46,7 +46,7 @@ public class AsyncUpload extends AsyncTransfer {
 			File file = sourceFile.toFile();
 			fis = new FileInputStream(file);
 
-			int totalLen = (int) file.length();
+			int totalLen = (int)file.length();
 			this.expectedBytes = totalLen;
 
 			String fileName = file.getName();
@@ -55,7 +55,7 @@ public class AsyncUpload extends AsyncTransfer {
 			out.writeAndFlush(fileHeader);
 			//send file name
 			out.writeAndFlush(fileName);
-			
+
 			//send file data
 			byte[] data = new byte[BLOCK_SIZE];
 			int count;

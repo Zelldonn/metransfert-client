@@ -1,6 +1,7 @@
-package com.metransfert.client.gui;
+package com.metransfert.client.gui.download;
 
 import com.metransfert.client.transactionhandlers.TransferListener;
+import com.metransfert.client.utils.GuiUtils;
 
 import javax.swing.*;
 import java.nio.file.Path;

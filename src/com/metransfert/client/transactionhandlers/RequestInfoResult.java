@@ -1,9 +1,5 @@
 package com.metransfert.client.transactionhandlers;
 
-import com.metransfert.common.ErrorTypes;
-import com.metransfert.common.PacketTypes;
-import com.packeteer.network.Packet;
-import com.packeteer.network.PacketUtils;
 
 import java.nio.ByteBuffer;
 
@@ -12,7 +8,7 @@ public class RequestInfoResult extends TransactionResult {
     public String fileName;
     public int fileSize;
 
-    public RequestInfoResult(Packet p) {
+   /* public RequestInfoResult(Packet p) {
         super(p);
         ByteBuffer bf = p.getPayloadBuffer();
 
@@ -28,5 +24,5 @@ public class RequestInfoResult extends TransactionResult {
             fileSize = bf.getInt();
             fileName = PacketUtils.readNetworkString(bf);
         }
-    }
+    }*/
 }

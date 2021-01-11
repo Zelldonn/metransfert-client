@@ -1,11 +1,4 @@
-package com.metransfert.client.gui;
-
-import com.metransfert.client.Channel;
-import com.metransfert.client.controller.ClientController;
-import com.metransfert.client.transactionhandlers.RequestInfoResult;
-import com.metransfert.client.transactionhandlers.TransactionListener;
-import com.metransfert.client.transactionhandlers.TransactionResult;
-import com.metransfert.client.transactionhandlers.TransferListener;
+package com.metransfert.client.gui.download;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -13,7 +6,6 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -31,15 +23,12 @@ public class DownloadTab extends JPanel {
 
     private JLabel fileInfoLabel;
 
-    private ArrayList<Channel> channels = new ArrayList<>();
-
     private ArrayList<DownloadPanel> downloadPanels = new ArrayList<>();
 
     public DownloadTab(){
         panel = this;
         initComponents();
     }
-
     public void initComponents(){
         String home = System.getProperty("user.home");
         Path path = Paths.get(home + "/Downloads/");
@@ -96,7 +85,7 @@ public class DownloadTab extends JPanel {
         });
 
         downloadButton = new DownloadButton("Show");
-        downloadButton.addActionListener(e -> {
+        /*downloadButton.addActionListener(e -> {
             ClientController g = ClientController.getInstance();
             Channel c = new Channel(g.getIp(), g.getPort());
             channels.add(c);
@@ -170,7 +159,7 @@ public class DownloadTab extends JPanel {
 
             }
 
-        });
+        });*/
 
         panel.add(saveDirectoryButton);
         panel.add(saveDirectoryTextField);

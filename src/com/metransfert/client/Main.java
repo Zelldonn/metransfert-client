@@ -1,14 +1,18 @@
 package com.metransfert.client;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.metransfert.client.controller.Address;
 import com.metransfert.client.controller.ClientController;
 import com.metransfert.client.gui.GUI;
 
 import javax.swing.*;
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+
         try {
             UIManager.setLookAndFeel( new FlatIntelliJLaf());
         } catch( Exception ex ) {
@@ -22,13 +26,14 @@ public class Main {
 
         GUI gui = new GUI();
 
-        gui.setLocationRelativeTo(null);
-        gui.setVisible(true);
-        gui.pack();
+        String home = System.getProperty("user.home");
+        Path uploadPath = Paths.get(home + "/Documents/");
+        Path downloadPath = Paths.get(home + "/Downloads/");
 
-        Channel c = new Channel("metransfer.ddns.net", 7999);
-
-        ClientController clientController = new ClientController(gui, c);
+        ClientController clientController = new ClientController(gui, new Address(null, "localhost", 8888), uploadPath, downloadPath);
         clientController.populateDefaultAddresses();
+        clientController.initGUI();
+        clientController.updateGUI();
+        clientController.initMainChannel();
     }
 }

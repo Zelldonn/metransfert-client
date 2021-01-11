@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/metransfert-client-gui" vcs="Git" />
-    <mapping directory="E:/Documents/GitHub/Packeteer" vcs="Git" />
-    <mapping directory="E:/Documents/GitHub/metransfert-common" vcs="Git" />
   </component>
 </project>

@@ -1,4 +1,4 @@
-package com.metransfert.client.gui;
+package com.metransfert.client.gui.download;
 
 import javax.swing.*;
 

@@ -4,7 +4,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-public class GuiUtils {
+public class Gui {
     /**
      * Converts byte to string with appropriate unit  * @param byte
      * @return human readable string
@@ -23,6 +23,10 @@ public class GuiUtils {
             s = String.format("%.2f",_byte/(mebibyte * 1024F)) + " GB";
         }
         return s;
+    }
+
+    static public long calculateThroughput(long transferredBytes, long oldTransferredBytes, long time, long oldTime){
+
     }
 
     static public long calculateTotalSize(File[] fileList) {

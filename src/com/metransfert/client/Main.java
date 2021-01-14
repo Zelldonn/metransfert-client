@@ -1,7 +1,8 @@
 package com.metransfert.client;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.metransfert.client.controller.Address;
+import com.metransfert.client.controller.ClientConfiguration;
 import com.metransfert.client.controller.ClientController;
 import com.metransfert.client.gui.GUI;
 
@@ -13,8 +14,28 @@ import java.nio.file.Paths;
 public class Main {
     public static void main(String[] args) throws IOException {
 
+        ClientConfiguration config = null;
+
+        Path userDir = Paths.get(System.getProperty("user.dir"));
+
         try {
-            UIManager.setLookAndFeel( new FlatIntelliJLaf());
+            config = ClientConfiguration.loadFromFile(userDir.resolve("client.properties"));
+        } catch (FileNotFoundException e) {
+            System.err.println("Could not load configuration from file. Creating file...");
+            createDefaultConfig();
+            try {
+                config = ClientConfiguration.loadFromFile(userDir.resolve("client.properties"));
+            } catch (FileNotFoundException fileNotFoundException) {
+                System.err.println("Cannot create file...EXITING");
+                System.exit(1);
+            }
+        }
+
+        try {
+            if(config.getTheme().equals("DARK"))
+                UIManager.setLookAndFeel( new FlatDarculaLaf());
+            else
+                UIManager.setLookAndFeel( new FlatIntelliJLaf());
         } catch( Exception ex ) {
             System.err.println( "Failed to initialize LaF" );
         }
@@ -26,14 +47,36 @@ public class Main {
 
         GUI gui = new GUI();
 
-        String home = System.getProperty("user.home");
-        Path uploadPath = Paths.get(home + "/Documents/");
-        Path downloadPath = Paths.get(home + "/Downloads/");
-
-        ClientController clientController = new ClientController(gui, new Address(null, "localhost", 8888), uploadPath, downloadPath);
-        clientController.populateDefaultAddresses();
+        ClientController clientController = new ClientController(gui, config, args);
+        //clientController.populateDefaultAddresses();
         clientController.initGUI();
-        clientController.updateGUI();
-        clientController.initMainChannel();
+        clientController.initUploadTab();
+        clientController.refreshGUI();
+    }
+
+    private static void createDefaultConfig() {
+        try {
+            File myObj = new File("client.properties");
+            if (myObj.createNewFile()) {
+                System.out.println("Default client.properties file created: " + myObj.getName());
+            } else {
+                System.out.println("File already exists.");
+            }
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        try {
+            FileWriter myWriter = new FileWriter("client.properties");
+            myWriter.write("ADDRESS=\n"+
+                    "THEME=\n"+
+                    "UPLOAD_PATH=\n"+
+                    "DOWNLOAD_PATH=\n");
+            myWriter.close();
+            System.out.println("Successfully wrote default properties.");
+        } catch (IOException e) {
+            System.out.println("An error occurred while writing to client.properties.");
+            e.printStackTrace();
+        }
     }
 }

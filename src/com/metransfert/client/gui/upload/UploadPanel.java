@@ -50,8 +50,6 @@ public class UploadPanel extends JPanel implements ActionListener {
         this.fileInfoLabel.setText(text);
     }
 
-    private long throughput;
-
     public UploadPanel(){
         initComponent();
     }

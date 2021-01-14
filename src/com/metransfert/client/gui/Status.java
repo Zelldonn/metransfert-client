@@ -4,5 +4,6 @@ public enum Status {
     TRYING,
     CONNECTED,
     DISCONNECTED,
-    TIMEOUT
+    TIMEOUT,
+    ALREADY_CONNECTED
 }

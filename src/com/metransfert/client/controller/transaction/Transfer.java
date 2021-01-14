@@ -1,9 +1,8 @@
 package com.metransfert.client.controller.transaction;
 
-import com.metransfert.client.controller.Address;
 import com.metransfert.client.controller.exception.ConnectionFailedException;
 import com.metransfert.client.transactionhandlers.TransferListener;
-import com.metransfert.client.utils.GuiUtils;
+import com.metransfert.client.utils.Gui;
 
 import java.io.*;
 import java.net.Socket;
@@ -47,8 +46,8 @@ abstract public class Transfer extends Transaction {
 
         buffer = new byte[BUFFER_SIZE];
 
-        this.numberOfFile = GuiUtils.calculateTotalFiles(fileList);
-        this.expectedBytes = GuiUtils.calculateTotalSize(fileList);
+        this.numberOfFile = Gui.calculateTotalFiles(fileList);
+        this.expectedBytes = Gui.calculateTotalSize(fileList);
         transferredBytes = 0L;
     }
 

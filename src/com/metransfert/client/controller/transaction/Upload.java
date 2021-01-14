@@ -1,6 +1,7 @@
 package com.metransfert.client.controller.transaction;
 
 import com.metransfert.client.transactionhandlers.TransferListener;
+import com.metransfert.client.utils.TransactionType;
 
 
 import java.io.*;
@@ -35,7 +36,7 @@ public class Upload extends Transfer{
 
             if(file.isFile()){
                 //System.out.print(" and it is a file of size " + file.length());
-                dos.write(0x1);
+                dos.write(TransactionType.FILE);
                 dos.writeLong(file.length());
                 dos.flush();
 
@@ -53,7 +54,7 @@ public class Upload extends Transfer{
                 bos.flush();
             }else{
                 //System.out.print(" and it is a directory");
-                dos.writeByte(0x1);
+                dos.writeByte(TransactionType.DIRECTORY);
 
                 //Not sure this is working
                 File[] filesInFolder = file.listFiles();
@@ -69,9 +70,9 @@ public class Upload extends Transfer{
                 }
             }
             byte next = dis.readByte();
-            if(next != 0x1){
-                //System.out.println("Server has not sended NEXTFILE ACK");
-            }else if(next == 0x1){
+            if(next != TransactionType.NEXT_FILE){
+                System.out.println("Server has not sended NEXTFILE ACK");
+            }else {
                 //System.out.println("Server received my file");
             }
         }
@@ -81,7 +82,7 @@ public class Upload extends Transfer{
     public void run(){
         try {
             //Sending header to notify multiple files upload
-            writeAndFlush((byte) 0x1);
+            writeAndFlush(TransactionType.UPLOAD);
 
             //SENDING information about the incoming files
             writeAndFlushTransactionInfo();

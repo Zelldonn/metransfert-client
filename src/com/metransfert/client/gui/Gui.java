@@ -1,5 +1,7 @@
 package com.metransfert.client.gui;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.metransfert.client.gui.upload.UploadTab;
 
 import javax.swing.*;
@@ -80,6 +82,43 @@ public class GUI extends JFrame {
         this.setTitle("MeTransfer");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(650,350);
+        this.addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                for(GUIListener l : GUIListeners)
+                    l.onGuiClosed();
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+
+            }
+
+            @Override
+            public void windowIconified(WindowEvent e) {
+
+            }
+
+            @Override
+            public void windowDeiconified(WindowEvent e) {
+
+            }
+
+            @Override
+            public void windowActivated(WindowEvent e) {
+
+            }
+
+            @Override
+            public void windowDeactivated(WindowEvent e) {
+
+            }
+        });
         ImageIcon img = new ImageIcon("img/logo.png");
         setIconImage(img.getImage());
 
@@ -173,6 +212,7 @@ public class GUI extends JFrame {
         serverMenu.add(selectServerMenu);
         UI_themeMenu.add(UI_DarkThemeMenuItem);
         UI_themeMenu.add(UI_LightThemeMenuItem);
+
         clientMenu.add(UI_themeMenu);
         clientMenu.add(editServerMenuItem);
 
@@ -194,6 +234,21 @@ public class GUI extends JFrame {
         tabbedPane.setPreferredSize(this.getSize());
 
         setContentPane(tabbedPane);
+    }
+    
+    public void setTheme(String theme) {
+        try {
+            if(theme.equals("LIGHT"))
+                UIManager.setLookAndFeel( new FlatIntelliJLaf());
+            if(theme.equals("DARK"))
+                UIManager.setLookAndFeel( new FlatDarculaLaf());
+        } catch( Exception ex ) {
+            System.err.println( "Failed to initialize LaF" );
+        }
+    }
+    public String getTheme(){
+        System.out.println(UIManager.getLookAndFeel());
+        return UIManager.getSystemLookAndFeelClassName();
     }
 
     public void setButtonBorder(JButton c, Boolean state){

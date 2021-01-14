@@ -2,6 +2,7 @@ package com.metransfert.client.controller.transaction;
 
 import com.metransfert.client.gui.Status;
 import com.metransfert.client.transactionhandlers.PingListener;
+import com.metransfert.client.utils.TransactionType;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,28 +18,27 @@ public class Ping extends Transaction {
     public Ping() {
     }
 
+    public void setStatus(Status status){
+        for(PingListener l : pingListeners){
+            l.onStatusChanged(status);
+        }
+    }
+
     @Override
     public void run(){
-       for(PingListener l : pingListeners){
-            l.onStatusChanged(Status.TRYING);
-        }
+       setStatus(Status.TRYING);
         try {
-            bos.write(0X1);
+            bos.write(TransactionType.PING);
             bos.flush();
             byte pong = (byte) bis.read();
-            if(pong == 0X1){
-                for(PingListener l : pingListeners){
-                    l.onStatusChanged(Status.CONNECTED);
-                }
+            //TODO : will never received answer if server does not answer
+            if(pong == TransactionType.PONG){
+                setStatus(Status.CONNECTED);
             }else{
-                for(PingListener l : pingListeners){
-                    l.onStatusChanged(Status.DISCONNECTED);
-                }
+                setStatus(Status.DISCONNECTED);
             }
         } catch (IOException e) {
-            for(PingListener l : pingListeners){
-                l.onStatusChanged(Status.TIMEOUT);
-            }
+            setStatus(Status.TIMEOUT);
             e.printStackTrace();
         }
     }

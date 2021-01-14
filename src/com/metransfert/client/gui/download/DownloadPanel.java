@@ -1,7 +1,7 @@
 package com.metransfert.client.gui.download;
 
 import com.metransfert.client.transactionhandlers.TransferListener;
-import com.metransfert.client.utils.GuiUtils;
+import com.metransfert.client.utils.Gui;
 
 import javax.swing.*;
 import java.nio.file.Path;
@@ -45,7 +45,7 @@ public class DownloadPanel extends JPanel{
         progressBar.setValue(percentage);
 
         throughput = getThroughput(info.transferredBytes, info.oldTransferredBytes);
-        String throughputString = GuiUtils.byte2Readable(throughput) + "/s";
+        String throughputString = Gui.byte2Readable(throughput) + "/s";
 
         progressBar.setString("Downloading... " +percentage+" %"+ "("+throughputString+")");
     }

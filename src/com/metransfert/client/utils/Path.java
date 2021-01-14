@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
 
-public class PathUtils {
+public class Path {
 
     /**
      * This function return all paths which are or contain at least one file in a given path
@@ -15,7 +15,7 @@ public class PathUtils {
      * @return
      */
 
-    public static boolean isValidPath(Path p){
+    public static boolean isValidPath(java.nio.file.Path p){
         try {
             Paths.get(p.toString());
         } catch (InvalidPathException | NullPointerException ex) {
@@ -30,8 +30,8 @@ public class PathUtils {
             fileList.add(file);
         else{
             try {
-                DirectoryStream<Path> directoryStream = Files.newDirectoryStream(file.toPath());
-                for (Path pa : directoryStream) {
+                DirectoryStream<java.nio.file.Path> directoryStream = Files.newDirectoryStream(file.toPath());
+                for (java.nio.file.Path pa : directoryStream) {
                     if(pa.toFile().isDirectory()){
                         if(!isDirEmpty(pa)){
                             fileList.add(pa.toFile());
@@ -44,8 +44,8 @@ public class PathUtils {
         }
         return fileList;
     }
-    public static boolean isDirEmpty(final Path directory) throws IOException {
-        try(DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory)) {
+    public static boolean isDirEmpty(final java.nio.file.Path directory) throws IOException {
+        try(DirectoryStream<java.nio.file.Path> dirStream = Files.newDirectoryStream(directory)) {
             return !dirStream.iterator().hasNext();
         }
     }

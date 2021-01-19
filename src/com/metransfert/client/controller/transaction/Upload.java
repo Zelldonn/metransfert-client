@@ -1,6 +1,8 @@
 package com.metransfert.client.controller.transaction;
 
+import com.metransfert.client.transactionhandlers.TransferInfo;
 import com.metransfert.client.transactionhandlers.TransferListener;
+import com.metransfert.client.utils.Gui;
 import com.metransfert.client.utils.TransactionType;
 
 
@@ -8,9 +10,9 @@ import java.io.*;
 
 public class Upload extends Transfer{
 
-    private FileInputStream fis;
-
     private boolean isRunning = true;
+
+    protected final File[] fileList;
 
     public void changeRunningState(){
         isRunning = !isRunning;
@@ -18,7 +20,9 @@ public class Upload extends Transfer{
     }
 
     public Upload(File[] fileList) {
-        super(fileList);
+        this.fileList = fileList;
+        this.expectedFiles = Gui.calculateTotalFiles(fileList);
+        this.expectedBytes = Gui.calculateTotalSize(fileList);
     }
 
     public void sendFile(File[] fileList) throws IOException {
@@ -40,7 +44,7 @@ public class Upload extends Transfer{
                 dos.writeLong(file.length());
                 dos.flush();
 
-                fis = new FileInputStream(file);
+                FileInputStream fis = new FileInputStream(file);
                 //System.out.print(" named: " + file.toString());
 
                 int count;
@@ -48,7 +52,7 @@ public class Upload extends Transfer{
                     bos.write(buffer, 0, count);
                     setTransferredBytes(getTransferredBytes()+count);
                     for(TransferListener listener : transferListeners){
-                        listener.onTransferUpdate(new TransferListener.Info(getExpectedBytes(), getTransferredBytes(), 0L));
+                        listener.onTransferUpdate(new TransferInfo(getExpectedBytes(), getTransferredBytes(), 0L));
                     }
                 }
                 bos.flush();
@@ -116,29 +120,6 @@ public class Upload extends Transfer{
         }
 
     }
-
-    /*private boolean answerIsValidate(Packet answer) throws IOException {
-
-
-        //trigger if invalid file name or
-        //TODO handle errors with flags
-        byte answerType = answer.getType();
-        if(answerType == PacketTypes.ERROR){
-            byte errorType = answer.getPayloadBuffer().get();
-            if(errorType == ErrorTypes.SERVER_ERROR){
-
-            }else if(errorType == ErrorTypes.INVALID_FILENAME){
-
-            }else{
-                //Does not follow standard error procedure in upload result context
-            }
-        }else if(answerType == PacketTypes.UPLOADRESULT){
-            return true;
-        }else{
-            //Does not follow standard procedure at all
-        }
-        return false;
-    }*/
 
     public boolean getRunningState() {
         return isRunning;

@@ -1,25 +1,37 @@
 package com.metransfert.client.gui.download;
 
-import com.metransfert.client.transactionhandlers.TransferListener;
+import com.metransfert.client.gui.TransferPanel;
+import com.metransfert.client.gui.upload.PanelListener;
+import com.metransfert.client.transactionhandlers.TransferInfo;
 import com.metransfert.client.utils.Gui;
 
 import javax.swing.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.nio.file.Path;
+import java.util.ArrayList;
 
-public class DownloadPanel extends JPanel{
+public class DownloadPanel extends TransferPanel {
+    ArrayList<DownloadPanelListener> listeners = new ArrayList<>();
 
-    private JProgressBar progressBar;
+    public void addDownloadPanelListeners(DownloadPanelListener l){
+        listeners.add(l);
+    }
 
     private JLabel downloadResultLabel;
 
     private final Path fileLocationPath;
 
-    private long throughput, lastNano;
-
     private JLabel fileInfoLabel;
 
-    public DownloadPanel(Path fileLocationPath){
-        this.fileLocationPath = fileLocationPath;
+    public JButton getOpenDownloadPathButton() {
+        return openDownloadPathButton;
+    }
+
+    private JButton openDownloadPathButton;
+
+    public DownloadPanel(Path p){
+        this.fileLocationPath = p;
         initComponent();
     }
 
@@ -29,38 +41,50 @@ public class DownloadPanel extends JPanel{
         progressBar.setVisible(true);
         progressBar.setStringPainted(true);
 
-        lastNano = System.nanoTime();
-        throughput = 0L;
-
         fileInfoLabel =  new JLabel("");
+
+        openDownloadPathButton = new JButton("Open");
+        openDownloadPathButton.setVisible(false);
+        openDownloadPathButton.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                for(DownloadPanelListener l : listeners){
+                    l.onOpenDownloadPathClicked();
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
 
         this.add(fileInfoLabel);
         fileInfoLabel.setVisible(false);
         this.add(progressBar);
+
+        this.add(pauseButton);
+        this.add(stopButton);
+        this.add(closeButton);
+
         this.add(downloadResultLabel);
-    }
 
-    public void update(TransferListener.Info info){
-        int percentage = (int)(((double)info.transferredBytes/(double)info.expectedBytes)*100);
-        progressBar.setValue(percentage);
-
-        throughput = getThroughput(info.transferredBytes, info.oldTransferredBytes);
-        String throughputString = Gui.byte2Readable(throughput) + "/s";
-
-        progressBar.setString("Downloading... " +percentage+" %"+ "("+throughputString+")");
-    }
-
-    private long getThroughput(long currentBytes, long lastBytes){
-        long currentNano = System.nanoTime();
-        long dB = currentBytes - lastBytes;
-        long dt = currentNano - lastNano;
-        long dt_s = dt/1_000_000_000L;
-        if(dB != 0 && dt_s != 0)
-            throughput = dB/dt_s;
-
-        lastNano = currentNano;
-
-        return throughput;
+        this.add(openDownloadPathButton);
     }
 
     public JProgressBar getProgressBar() {

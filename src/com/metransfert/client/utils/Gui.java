@@ -26,7 +26,7 @@ public class Gui {
     }
 
     static public long calculateThroughput(long transferredBytes, long oldTransferredBytes, long time, long oldTime){
-
+        return  0L;
     }
 
     static public long calculateTotalSize(File[] fileList) {

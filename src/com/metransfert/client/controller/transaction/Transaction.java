@@ -1,9 +1,7 @@
 package com.metransfert.client.controller.transaction;
 import com.metransfert.client.controller.exception.ConnectionFailedException;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 
 abstract public class Transaction implements Runnable {
@@ -14,6 +12,10 @@ abstract public class Transaction implements Runnable {
 
     protected BufferedOutputStream bos;
 
+    protected DataInputStream dis;
+
+    protected DataOutputStream dos;
+
     public void setSocket(Socket s) throws ConnectionFailedException {
         this.soc = s;
         if (soc == null)
@@ -22,6 +24,10 @@ abstract public class Transaction implements Runnable {
             this.bis = new BufferedInputStream(soc.getInputStream());
 
             this.bos = new BufferedOutputStream(soc.getOutputStream());
+
+            this.dis = new DataInputStream(bis);
+
+            this.dos = new DataOutputStream(bos);
         } catch (IOException e) {
             throw new ConnectionFailedException(e);
         }

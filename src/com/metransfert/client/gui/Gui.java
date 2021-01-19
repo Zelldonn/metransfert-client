@@ -2,6 +2,7 @@ package com.metransfert.client.gui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.metransfert.client.gui.download.DownloadTab;
 import com.metransfert.client.gui.upload.UploadTab;
 
 import javax.swing.*;
@@ -9,14 +10,18 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 
-public class GUI extends JFrame {
+public class Gui extends JFrame {
 
     private UploadTab uploadTab;
+
+    private  DownloadTab downloadTab;
 
     ArrayList<GUIListener> GUIListeners = new ArrayList<GUIListener>();
     public void addGuiListener(GUIListener l){
         GUIListeners.add(l);
     }
+
+    private String currentTheme;
 
     public void setConnectionStatusLabel(Status s, String ip, String port) {
         String status;
@@ -65,7 +70,6 @@ public class GUI extends JFrame {
 
     JTextField portLabel;
 
-
     public JMenu getSelectServerMenu() {
         return selectServerMenu;
     }
@@ -76,7 +80,9 @@ public class GUI extends JFrame {
 
     JMenu selectServerMenu;
 
-    public GUI(){
+    JMenuItem UI_themeMenuItem;
+
+    public Gui(){
 
         //---------Define Frame properties---------\\
         this.setTitle("MeTransfer");
@@ -134,13 +140,36 @@ public class GUI extends JFrame {
         JMenuBar menuBar = new JMenuBar();
         JMenu serverMenu = new JMenu("Server");
         JMenu clientMenu = new JMenu("Client");
-        JMenuItem changeAddressMenuItem = new JMenuItem("Change address");
         selectServerMenu = new JMenu("Select server");
-        JMenuItem editServerMenuItem = new JMenuItem("Edit server addresses");
         connectionStatusLabel = new JLabel("Not Connected");
         JMenu UI_themeMenu = new JMenu("Change theme");
-        JMenuItem UI_LightThemeMenuItem = new JMenuItem("Light");
-        JMenuItem UI_DarkThemeMenuItem = new JMenuItem("Dark");
+        UI_themeMenuItem = new JMenuItem("Dark");
+        UI_themeMenuItem.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                switchTheme();
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
 
         connectionStatusLabel.setForeground(Color.GRAY);
         connectionStatusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -208,13 +237,10 @@ public class GUI extends JFrame {
             }
         });
 
-        serverMenu.add(changeAddressMenuItem);
         serverMenu.add(selectServerMenu);
-        UI_themeMenu.add(UI_DarkThemeMenuItem);
-        UI_themeMenu.add(UI_LightThemeMenuItem);
+        UI_themeMenu.add(UI_themeMenuItem);
 
         clientMenu.add(UI_themeMenu);
-        clientMenu.add(editServerMenuItem);
 
         menuBar.add(serverMenu);
         menuBar.add(clientMenu);
@@ -228,27 +254,48 @@ public class GUI extends JFrame {
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setTabLayoutPolicy(1);
+
         uploadTab = new UploadTab();
+        downloadTab = new DownloadTab();
         tabbedPane.addTab("Upload", uploadTab);
-        //tabbedPane.addTab("Download", new DownloadTab());
+        tabbedPane.addTab("Download", downloadTab);
+
         tabbedPane.setPreferredSize(this.getSize());
 
         setContentPane(tabbedPane);
     }
-    
+
+    private void switchTheme(){
+        if(currentTheme.equals("LIGHT")){
+
+            setTheme("DARK");
+        }else{
+            setTheme("LIGHT");
+        }
+    }
+
     public void setTheme(String theme) {
+        this.currentTheme = theme;
         try {
-            if(theme.equals("LIGHT"))
+            if(theme.equals("LIGHT")){
+                UI_themeMenuItem.setText("Dark");
                 UIManager.setLookAndFeel( new FlatIntelliJLaf());
-            if(theme.equals("DARK"))
+            }
+            if(theme.equals("DARK")){
                 UIManager.setLookAndFeel( new FlatDarculaLaf());
+                UI_themeMenuItem.setText("Light");
+            }
+
+            SwingUtilities.updateComponentTreeUI(this);
+            this.revalidate();
+            this.repaint();
         } catch( Exception ex ) {
             System.err.println( "Failed to initialize LaF" );
         }
     }
+
     public String getTheme(){
-        System.out.println(UIManager.getLookAndFeel());
-        return UIManager.getSystemLookAndFeelClassName();
+        return currentTheme;
     }
 
     public void setButtonBorder(JButton c, Boolean state){
@@ -261,5 +308,7 @@ public class GUI extends JFrame {
     public UploadTab getUploadTab() {
         return uploadTab;
     }
+
+    public DownloadTab getDownloadTab(){ return downloadTab; }
 
 }

@@ -1,11 +1,8 @@
 package com.metransfert.client.controller.transaction;
 
-import com.metransfert.client.controller.exception.ConnectionFailedException;
 import com.metransfert.client.transactionhandlers.TransferListener;
-import com.metransfert.client.utils.Gui;
 
 import java.io.*;
-import java.net.Socket;
 import java.util.ArrayList;
 
 abstract public class Transfer extends Transaction {
@@ -18,13 +15,7 @@ abstract public class Transfer extends Transaction {
 
     private static final int BUFFER_SIZE = 16*1024;
 
-    protected DataInputStream dis;
-
-    protected DataOutputStream dos;
-
     protected byte[] data, buffer;
-
-    protected final File[] fileList;
 
     protected long expectedBytes;
 
@@ -37,36 +28,26 @@ abstract public class Transfer extends Transaction {
 
     protected long transferredBytes;
 
-    protected int numberOfFile;
+    protected int expectedFiles;
 
-    protected boolean finished = false;
+    protected boolean success = false;
 
-    public Transfer(File[] fileList) {
-        this.fileList = fileList;
+    public Transfer() {
+        this.buffer = new byte[BUFFER_SIZE];
 
-        buffer = new byte[BUFFER_SIZE];
-
-        this.numberOfFile = Gui.calculateTotalFiles(fileList);
-        this.expectedBytes = Gui.calculateTotalSize(fileList);
-        transferredBytes = 0L;
+        this.transferredBytes = 0L;
     }
 
     public int getFileNumber(){
-        return numberOfFile;
+        return expectedFiles;
     }
     public long getExpectedBytes(){
         return expectedBytes;
     }
 
-    @Override
-    public void setSocket(Socket s) throws ConnectionFailedException {
-        super.setSocket(s);
-        dis = new DataInputStream(bis);
-        dos = new DataOutputStream(bos);
-    }
 
     public void writeAndFlushTransactionInfo() throws IOException {
-        dos.writeInt(numberOfFile);
+        dos.writeInt(expectedFiles);
         dos.writeLong(expectedBytes);
         dos.flush();
     }

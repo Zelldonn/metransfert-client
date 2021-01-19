@@ -4,7 +4,7 @@ import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.metransfert.client.controller.ClientConfiguration;
 import com.metransfert.client.controller.ClientController;
-import com.metransfert.client.gui.GUI;
+import com.metransfert.client.gui.Gui;
 
 import javax.swing.*;
 import java.io.*;
@@ -45,12 +45,13 @@ public class Main {
         JFrame.setDefaultLookAndFeelDecorated(true);
         JDialog.setDefaultLookAndFeelDecorated(true);
 
-        GUI gui = new GUI();
+        Gui gui = new Gui();
 
         ClientController clientController = new ClientController(gui, config, args);
         //clientController.populateDefaultAddresses();
         clientController.initGUI();
         clientController.initUploadTab();
+        clientController.initDownloadTab();
         clientController.refreshGUI();
     }
 

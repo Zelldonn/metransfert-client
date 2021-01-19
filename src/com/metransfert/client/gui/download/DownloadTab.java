@@ -5,34 +5,35 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-public class DownloadTab extends JPanel {
-    private JTextField idTextField;
+public class DownloadTab extends JPanel implements ActionListener{
+    ArrayList<DownloadTabListener> listeners = new ArrayList<>();
 
-    private JTextField saveDirectoryTextField;
+    public void addDownloadTabListeners(DownloadTabListener l){
+        listeners.add(l);
+    }
 
-    private DownloadButton downloadButton;
+    private JTextField pathTextField, idTextField;
 
-    private final JPanel panel;
-
-    private Path savePathDirectory;
+    private JButton downloadButton, pathChooserButton;
 
     private JLabel fileInfoLabel;
+
+    private boolean pathChooserClicked = false;
 
     private ArrayList<DownloadPanel> downloadPanels = new ArrayList<>();
 
     public DownloadTab(){
-        panel = this;
         initComponents();
     }
+
     public void initComponents(){
         String home = System.getProperty("user.home");
         Path path = Paths.get(home + "/Downloads/");
-        savePathDirectory = path;
 
         fileInfoLabel = new JLabel("");
         fileInfoLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -53,17 +54,19 @@ public class DownloadTab extends JPanel {
                     idTextField.setText(">>ID<<");
             }
         });
-
-        saveDirectoryTextField = new JTextField(path.toString(), 12);
-        saveDirectoryTextField.getDocument().addDocumentListener(new DocumentListener() {
+        idTextField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
-                savePathDirectory =  Paths.get(saveDirectoryTextField.getText());
+                for(DownloadTabListener l : listeners){
+                    l.onIDTextFieldChanged();
+                }
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                savePathDirectory =  Paths.get(saveDirectoryTextField.getText());
+                for(DownloadTabListener l : listeners){
+                    l.onIDTextFieldChanged();
+                }
             }
 
             @Override
@@ -72,110 +75,95 @@ public class DownloadTab extends JPanel {
             }
         });
 
-        JButton saveDirectoryButton = new JButton("Set save location");
-        saveDirectoryButton.addActionListener(e -> {
-            JFileChooser fc = new JFileChooser();
-            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int i = fc.showOpenDialog(panel);
-            if(i == JFileChooser.APPROVE_OPTION) {
-                savePathDirectory = fc.getSelectedFile().toPath();
+        pathTextField = new JTextField(path.toString(), 12);
+        pathTextField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                try {
+                    Path p = Paths.get(pathTextField.getText());
+                    if(p.toFile().isDirectory() && !pathChooserClicked){
+                        for(DownloadTabListener l : listeners){
+                            l.onPathTextFieldChanged(p);
+                        }
+                    }
+                } catch (InvalidPathException ignored){
+                    System.err.println("invalid path");
+                }
+            }
 
-                saveDirectoryTextField.setText(savePathDirectory.toString());
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                try {
+                    Path p = Paths.get(pathTextField.getText());
+                    if(p.toFile().isDirectory() && !pathChooserClicked){
+                        for(DownloadTabListener l : listeners){
+                            l.onPathTextFieldChanged(p);
+                        }
+                    }
+                } catch (InvalidPathException ignored){
+                    System.err.println("invalid path");
+                }
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+
             }
         });
 
-        downloadButton = new DownloadButton("Show");
-        /*downloadButton.addActionListener(e -> {
-            ClientController g = ClientController.getInstance();
-            Channel c = new Channel(g.getIp(), g.getPort());
-            channels.add(c);
+        pathChooserButton = new JButton("Set save directory");
+        pathChooserButton.addActionListener(this);
 
-            if(!downloadButton.canDownload){
-                String id = idTextField.getText();
-
-                c.requestInfo(id, new TransactionListener() {
-                    @Override
-                    public void onTransactionStart() {
-
-                    }
-
-                    @Override
-                    public void onTransactionFinish(TransactionResult result) {
-                        RequestInfoResult infoResult = (RequestInfoResult)result;
-
-                        String display;
-                        if(!infoResult.id_exists)
-                            display = "File does not exist";
-                        else{
-                            display = infoResult.fileName + " | " + GuiUtils.byte2Readable(infoResult.fileSize);
-                            downloadButton.setDownload(true);
-                            downloadButton.setFileName(infoResult.fileName);
-                        }
-                        fileInfoLabel.setText(display);
-                    }
-                });
-            }else{
-                if(!isDirectory(savePathDirectory)){
-                    saveDirectoryTextField.setText("Not a directory !");
-                }else{
-                    String temp = savePathDirectory.toString() + "/" + downloadButton.fileName;
-                    Path downloadPath = Paths.get(temp);
-
-                    DownloadPanel p = new DownloadPanel(downloadPath);
-                    downloadPanels.add(p);
-                    panel.add(p);
-                    refreshPanel();
-
-                    String id = idTextField.getText();
-                    idTextField.setText("");
-
-                    try {
-                        c.download(id, downloadPath, new TransferListener() {
-                            @Override
-                            public void onTransferUpdate(Info info) {
-                                p.update(info);
-                            }
-
-                            @Override
-                            public void onTransactionStart() {
-                                downloadButton.setDownload(false);
-                                p.getFileInfoLabel().setText(fileInfoLabel.getText());
-                                p.getFileInfoLabel().setVisible(true);
-                                fileInfoLabel.setText("");
-                            }
-
-                            @Override
-                            public void onTransactionFinish(TransactionResult result) {
-                                p.getProgressBar().setVisible(false);
-                                p.getFileInfoLabel().setVisible(false);
-                                p.getDownloadResultLabel().setText("File saved in : " + p.getFileLocationPath().toString());
-                            }
-                        });
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
-                }
+        downloadButton = new JButton("Show");
+        downloadButton.addActionListener(this);
 
 
-            }
-
-        });*/
-
-        panel.add(saveDirectoryButton);
-        panel.add(saveDirectoryTextField);
-        panel.add(idTextField);
-        panel.add(downloadButton);
-        panel.add(fileInfoLabel);
+        this.add(pathChooserButton);
+        this.add(pathTextField);
+        this.add(idTextField);
+        this.add(downloadButton);
+        this.add(fileInfoLabel);
     }
 
-    private void refreshPanel(){
+    public void refreshPanel(){
         revalidate();
         repaint();
     }
 
-    private boolean isDirectory(Path path){
-        File file = new File(path.toString());
-        return file.isDirectory();
+    public void setFileInfoLabel(String text){
+        fileInfoLabel.setText(text);
     }
 
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if(e.getSource() == pathChooserButton){
+            pathChooserClicked = true;
+            for(DownloadTabListener l : listeners)
+                l.onPathChooserClicked();
+        }
+        if(e.getSource() == downloadButton){
+            for(DownloadTabListener l : listeners)
+                l.onDownloadButtonClicked();
+        }
+    }
+
+    public void setPathTextField(String text) {
+        pathTextField.setText(text);
+        pathChooserClicked = false;
+    }
+    public String getIdTextField() {
+        return idTextField.getText();
+    }
+
+    public void setFileInfoLabelVisible(boolean b){
+        fileInfoLabel.setVisible(b);
+    }
+
+    public void setDownloadButton(String text) {
+        this.downloadButton.setText(text);
+    }
+
+    public void setIdTextField(String s) {
+        idTextField.setText(s);
+    }
 }

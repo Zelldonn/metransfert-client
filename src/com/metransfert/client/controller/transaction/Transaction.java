@@ -16,6 +16,17 @@ abstract public class Transaction implements Runnable {
 
     protected DataOutputStream dos;
 
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    public void setRunning(boolean running) {
+        isRunning = running;
+    }
+
+    protected boolean isRunning = false;
+
+
     public void setSocket(Socket s) throws ConnectionFailedException {
         this.soc = s;
         if (soc == null)
@@ -28,9 +39,15 @@ abstract public class Transaction implements Runnable {
             this.dis = new DataInputStream(bis);
 
             this.dos = new DataOutputStream(bos);
+
+            this.isRunning = true;
         } catch (IOException e) {
             throw new ConnectionFailedException(e);
         }
+    }
+
+    public void endTransaction() throws IOException {
+        this.soc.close();
     }
 
     public void writeAndFlush(byte b) throws IOException {

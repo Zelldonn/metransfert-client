@@ -1,4 +1,4 @@
-package com.metransfert.client.gui;
+package com.metransfert.client.gui.common;
 
 public enum Status {
     TRYING,

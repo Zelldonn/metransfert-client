@@ -1,10 +1,11 @@
-package com.metransfert.client.gui;
+package com.metransfert.client.gui.common;
 
-import com.metransfert.client.utils.Path;
+import com.metransfer.common.PathsUtils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.nio.file.Path;
 
 public class MyFileChooser {
 
@@ -37,7 +38,7 @@ public class MyFileChooser {
     public boolean openFileChooser(java.nio.file.Path p, Component c, int selectionMode){
         fileChooser = new JFileChooser();
 
-        if(!Path.isValidPath(p))
+        if(!PathsUtils.isValidPath(p))
             return false;
 
         File dir = p.toFile();

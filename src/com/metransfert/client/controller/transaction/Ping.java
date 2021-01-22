@@ -1,8 +1,8 @@
 package com.metransfert.client.controller.transaction;
 
-import com.metransfert.client.gui.Status;
+import com.metransfer.common.TransactionType;
+import com.metransfert.client.gui.common.Status;
 import com.metransfert.client.transactionhandlers.PingListener;
-import com.metransfert.client.utils.TransactionType;
 
 import java.io.IOException;
 import java.util.ArrayList;

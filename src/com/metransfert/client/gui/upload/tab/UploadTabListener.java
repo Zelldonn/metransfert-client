@@ -1,4 +1,4 @@
-package com.metransfert.client.gui.upload;
+package com.metransfert.client.gui.upload.tab;
 
 import java.io.File;
 import java.util.List;

@@ -1,8 +1,11 @@
 package com.metransfert.client.gui.upload;
 
-import com.metransfert.client.gui.TransferPanel;
+import com.metransfert.client.gui.common.TransferPanel;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
@@ -60,7 +63,7 @@ public class UploadPanel extends TransferPanel {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-
+                copyToClipBoard(uploadIDTextField.getText());
             }
 
             @Override
@@ -84,8 +87,8 @@ public class UploadPanel extends TransferPanel {
         this.add(uploadIDTextField);
         this.add(clipboardButton);
 
-        this.add(pauseButton);
-        this.add(stopButton);
+        //this.add(pauseButton);
+        //this.add(stopButton);
         this.add(closeButton);
     }
 
@@ -101,5 +104,11 @@ public class UploadPanel extends TransferPanel {
 
     public JButton getClipboardButton() {
         return clipboardButton;
+    }
+
+    public static void copyToClipBoard(String text){
+        StringSelection stringSelection = new StringSelection(text);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
     }
 }

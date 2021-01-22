@@ -1,10 +1,10 @@
 package com.metransfert.client.controller.transaction;
 
+import com.metransfer.common.TransactionType;
 import com.metransfert.client.transactionhandlers.DownloadListener;
-import com.metransfert.client.transactionhandlers.RequestListener;
+
 import com.metransfert.client.transactionhandlers.TransferInfo;
-import com.metransfert.client.transactionhandlers.TransferListener;
-import com.metransfert.client.utils.TransactionType;
+
 
 import java.io.*;
 import java.nio.file.Files;
@@ -73,7 +73,7 @@ public class Download extends Transfer{
                     read += count;
                     transferredBytes += count;
                     fos.write(buffer, 0, count);
-                    for(TransferListener l :transferListeners)
+                    for(DownloadListener l :downloadListeners)
                         l.onTransferUpdate(new TransferInfo(expectedBytes, transferredBytes, 0L));
                 }
             }else if(pathType == TransactionType.DIRECTORY){
@@ -121,6 +121,9 @@ public class Download extends Transfer{
             expectedBytes = dis.readLong();
 
             //on transaction start
+            for(DownloadListener l : downloadListeners){
+                l.onTransactionStart();
+            }
 
             receiveFile(downloadPath);
 

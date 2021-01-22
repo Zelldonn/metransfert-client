@@ -4,6 +4,7 @@
     <root id="archive" name="metransfert-client.jar">
       <element id="module-output" name="metransfert-client" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/formdev/flatlaf/0.44/flatlaf-0.44.jar" path-in-jar="/" />
+      <element id="module-output" name="metransfer-common" />
     </root>
   </artifact>
 </component>

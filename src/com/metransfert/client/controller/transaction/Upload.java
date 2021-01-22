@@ -1,14 +1,15 @@
 package com.metransfert.client.controller.transaction;
 
+import com.metransfer.common.TransactionType;
+import com.metransfer.common.Ui;
 import com.metransfert.client.transactionhandlers.TransferInfo;
 import com.metransfert.client.transactionhandlers.TransferListener;
-import com.metransfert.client.utils.Gui;
-import com.metransfert.client.utils.TransactionType;
-
 
 import java.io.*;
 
 public class Upload extends Transfer{
+
+    FileInputStream fis;
 
     private boolean isRunning = true;
 
@@ -21,8 +22,8 @@ public class Upload extends Transfer{
 
     public Upload(File[] fileList) {
         this.fileList = fileList;
-        this.expectedFiles = Gui.calculateTotalFiles(fileList);
-        this.expectedBytes = Gui.calculateTotalSize(fileList);
+        this.expectedFiles = Ui.calculateExpectedFiles(fileList);
+        this.expectedBytes = Ui.calculateExpectedBytes(fileList);
     }
 
     public void sendFile(File[] fileList) throws IOException {
@@ -44,7 +45,10 @@ public class Upload extends Transfer{
                 dos.writeLong(file.length());
                 dos.flush();
 
-                FileInputStream fis = new FileInputStream(file);
+                try{
+                    fis = new FileInputStream(file);
+                }catch(IOException e){throw new IOException("File cannot be read"); }
+
                 //System.out.print(" named: " + file.toString());
 
                 int count;

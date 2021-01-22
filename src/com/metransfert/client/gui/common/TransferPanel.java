@@ -1,6 +1,4 @@
-package com.metransfert.client.gui;
-
-import com.metransfert.client.gui.upload.PanelListener;
+package com.metransfert.client.gui.common;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,9 +10,9 @@ import java.util.ArrayList;
 
 public class TransferPanel extends JPanel implements ActionListener {
 
-    protected ArrayList<PanelListener> listeners = new ArrayList<PanelListener>();
+    protected ArrayList<TransferPanelListener> listeners = new ArrayList<TransferPanelListener>();
 
-    public void addPanelListener(PanelListener newListener){
+    public void addPanelListener(TransferPanelListener newListener){
         listeners.add(newListener);
     }
 
@@ -26,7 +24,35 @@ public class TransferPanel extends JPanel implements ActionListener {
 
     protected JButton pauseButton, stopButton, closeButton;
 
+    public long getOldTransferredBytes() {
+        return oldTransferredBytes;
+    }
+
+    public void setOldTransferredBytes(long oldTransferredBytes) {
+        this.oldTransferredBytes = oldTransferredBytes;
+    }
+
+    public long getOldTime() {
+        return oldTime;
+    }
+
+    public void setOldTime(long oldTime) {
+        this.oldTime = oldTime;
+    }
+
+    protected long oldTransferredBytes, oldTime ;
+
+    public long throughputSum, throughputAverage;
+
+    public int count;
+
     public TransferPanel(){
+        this.oldTransferredBytes = 0L;
+        this.oldTime = System.currentTimeMillis();
+        this.throughputAverage = 0L;
+        this.throughputSum = 0L;
+        this.count = 0;
+
         pauseIcon = new ImageIcon("img/pause.png");
         img_ = pauseIcon.getImage() ;
         scaledImage = img_.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH) ;
@@ -106,16 +132,17 @@ public class TransferPanel extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == closeButton) {
-            for(PanelListener listener : listeners) {
+            for(TransferPanelListener listener : listeners) {
                 listener.onClosedButtonClicked();
             }
         }
         else if(e.getSource() == pauseButton){
-            for(PanelListener listener : listeners) {
+            for(TransferPanelListener listener : listeners) {
                 listener.onPauseButtonClicked();
             }
         }else if(e.getSource() == stopButton){
-            for(PanelListener listener : listeners) {
+            for(TransferPanelListener listener : listeners) {
+
                 listener.onStopButtonClicked();
             }
         }

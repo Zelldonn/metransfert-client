@@ -1,4 +1,4 @@
-package com.metransfert.client.gui.download;
+package com.metransfert.client.gui.download.tab;
 
 import java.nio.file.Path;
 

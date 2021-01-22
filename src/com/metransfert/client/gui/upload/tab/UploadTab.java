@@ -1,4 +1,4 @@
-package com.metransfert.client.gui.upload;
+package com.metransfert.client.gui.upload.tab;
 
 import javax.swing.*;
 import java.awt.datatransfer.DataFlavor;

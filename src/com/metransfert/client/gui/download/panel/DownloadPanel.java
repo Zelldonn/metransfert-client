@@ -1,22 +1,13 @@
-package com.metransfert.client.gui.download;
+package com.metransfert.client.gui.download.panel;
 
-import com.metransfert.client.gui.TransferPanel;
-import com.metransfert.client.gui.upload.PanelListener;
-import com.metransfert.client.transactionhandlers.TransferInfo;
-import com.metransfert.client.utils.Gui;
-
+import com.metransfert.client.gui.common.TransferPanel;
 import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.nio.file.Path;
-import java.util.ArrayList;
 
-public class DownloadPanel extends TransferPanel {
-    ArrayList<DownloadPanelListener> listeners = new ArrayList<>();
 
-    public void addDownloadPanelListeners(DownloadPanelListener l){
-        listeners.add(l);
-    }
+public class DownloadPanel extends TransferPanel  {
 
     private JLabel downloadResultLabel;
 
@@ -45,41 +36,13 @@ public class DownloadPanel extends TransferPanel {
 
         openDownloadPathButton = new JButton("Open");
         openDownloadPathButton.setVisible(false);
-        openDownloadPathButton.addMouseListener(new MouseListener() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                for(DownloadPanelListener l : listeners){
-                    l.onOpenDownloadPathClicked();
-                }
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-
-            }
-        });
 
         this.add(fileInfoLabel);
         fileInfoLabel.setVisible(false);
         this.add(progressBar);
 
-        this.add(pauseButton);
-        this.add(stopButton);
+        //this.add(pauseButton);
+        //this.add(stopButton);
         this.add(closeButton);
 
         this.add(downloadResultLabel);
@@ -102,4 +65,5 @@ public class DownloadPanel extends TransferPanel {
     public JLabel getFileInfoLabel(){
         return fileInfoLabel;
     }
+
 }

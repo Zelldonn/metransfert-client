@@ -1,8 +1,7 @@
 package com.metransfert.client.controller.transaction;
 
+import com.metransfer.common.TransactionType;
 import com.metransfert.client.transactionhandlers.RequestListener;
-import com.metransfert.client.transactionhandlers.TransferListener;
-import com.metransfert.client.utils.TransactionType;
 
 import java.io.IOException;
 import java.util.ArrayList;

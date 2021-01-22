@@ -1,4 +1,6 @@
-package com.metransfert.client.gui.download;
+package com.metransfert.client.gui.download.tab;
+
+import com.metransfert.client.gui.download.panel.DownloadPanel;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

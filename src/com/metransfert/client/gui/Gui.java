@@ -2,26 +2,32 @@ package com.metransfert.client.gui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.metransfert.client.gui.download.DownloadTab;
-import com.metransfert.client.gui.upload.UploadTab;
+import com.metransfert.client.gui.common.Status;
+import com.metransfert.client.gui.download.tab.DownloadTab;
+import com.metransfert.client.gui.upload.tab.UploadTab;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 
-public class Gui extends JFrame {
+public class Gui extends JFrame{
+
+    ArrayList<GUIListener> GUIListeners = new ArrayList<GUIListener>();
+
+    public void addGuiListener(GUIListener l){
+        GUIListeners.add(l);
+    }
 
     private UploadTab uploadTab;
 
     private  DownloadTab downloadTab;
 
-    ArrayList<GUIListener> GUIListeners = new ArrayList<GUIListener>();
-    public void addGuiListener(GUIListener l){
-        GUIListeners.add(l);
-    }
-
     private String currentTheme;
+
+    JTabbedPane tabbedPane;
+
+    private boolean isInTray = false;
 
     public void setConnectionStatusLabel(Status s, String ip, String port) {
         String status;
@@ -82,49 +88,17 @@ public class Gui extends JFrame {
 
     JMenuItem UI_themeMenuItem;
 
-    public Gui(){
+    private TrayIcon trayIcon;
+    private SystemTray tray;
 
+    Image traySimple, trayGreen;
+
+    public Gui(){
         //---------Define Frame properties---------\\
         this.setTitle("MeTransfer");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(650,350);
-        this.addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {
 
-            }
-
-            @Override
-            public void windowClosing(WindowEvent e) {
-                for(GUIListener l : GUIListeners)
-                    l.onGuiClosed();
-            }
-
-            @Override
-            public void windowClosed(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowIconified(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowDeiconified(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowActivated(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowDeactivated(WindowEvent e) {
-
-            }
-        });
         ImageIcon img = new ImageIcon("img/logo.png");
         setIconImage(img.getImage());
 
@@ -135,6 +109,106 @@ public class Gui extends JFrame {
 
         //Move focus to the next item (Avoid first button to be focused)
         setFocusable(true);
+
+        //Handling system tray
+        this.setDefaultCloseOperation(JFrame.ICONIFIED);
+
+        this.addWindowListener(new WindowAdapter(){
+            public void windowClosing(WindowEvent windowEvent) {
+                setExtendedState(JFrame.ICONIFIED);
+            }
+        });
+
+        if(SystemTray.isSupported()){
+            System.out.println("system tray supported");
+            tray=SystemTray.getSystemTray();
+
+            traySimple = Toolkit.getDefaultToolkit().getImage("img/logo.png");
+            trayGreen = Toolkit.getDefaultToolkit().getImage("img/logo_green.png");
+            ActionListener exitListener= e -> {
+                for(GUIListener l : GUIListeners){
+                    l.onGuiClosed();
+                }
+                System.exit(0);
+            };
+            PopupMenu popup=new PopupMenu();
+            MenuItem defaultItem=new MenuItem("Exit");
+
+            defaultItem.addActionListener(exitListener);
+            popup.add(defaultItem);
+            defaultItem=new MenuItem("Open");
+            defaultItem.addActionListener(e -> {
+                removeFromTray();
+            });
+            popup.add(defaultItem);
+            trayIcon = new TrayIcon(traySimple, "MeTransfer", popup);
+            trayIcon.setImageAutoSize(true);
+
+            trayIcon.addMouseListener(new MouseListener() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
+                        removeFromTray();
+                    }
+                }
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+
+                }
+            });
+        }else{
+            System.err.println("system tray not supported");
+        }
+        addWindowStateListener(e -> {
+            if(e.getNewState()==ICONIFIED){
+                try {
+                    isInTray = true;
+                    tray.add(trayIcon);
+                    setVisible(false);
+                    //System.out.println("added to SystemTray");
+                } catch (AWTException ex) {
+                    //System.err.println("unable to add to tray");
+                }
+            }
+            if(e.getNewState()==7){
+                try{
+                    isInTray = true;
+                    tray.add(trayIcon);
+                    setVisible(false);
+                    //System.out.println("added to SystemTray");
+                }catch(AWTException ex){
+                    //System.err.println("unable to add to system tray");
+                }
+            }
+            if(e.getNewState()==MAXIMIZED_BOTH){
+                tray.remove(trayIcon);
+                setVisible(true);
+                trayIcon.setImage(this.traySimple);
+                //System.out.println("Tray icon removed");
+            }
+            if(e.getNewState()==NORMAL){
+                tray.remove(trayIcon);
+                setVisible(true);
+                trayIcon.setImage(this.traySimple);
+                //LSystem.out.println("Tray icon removed");
+            }
+        });
 
         //-------Creating the MenuBar and adding components------\\
         JMenuBar menuBar = new JMenuBar();
@@ -252,7 +326,7 @@ public class Gui extends JFrame {
 
         //Drag n Drop box ?
 
-        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane = new JTabbedPane();
         tabbedPane.setTabLayoutPolicy(1);
 
         uploadTab = new UploadTab();
@@ -265,6 +339,14 @@ public class Gui extends JFrame {
         setContentPane(tabbedPane);
     }
 
+    public void setNotificationToTray(){
+        trayIcon.setImage(this.trayGreen);
+    }
+
+    public void setTrayIconText(String text){
+        trayIcon.setToolTip(text);
+    }
+
     private void switchTheme(){
         if(currentTheme.equals("LIGHT")){
 
@@ -272,6 +354,10 @@ public class Gui extends JFrame {
         }else{
             setTheme("LIGHT");
         }
+    }
+
+    public JTabbedPane getTabbedPane() {
+        return tabbedPane;
     }
 
     public void setTheme(String theme) {
@@ -311,4 +397,13 @@ public class Gui extends JFrame {
 
     public DownloadTab getDownloadTab(){ return downloadTab; }
 
+    public void removeFromTray(){
+        if(isInTray){
+            setVisible(true);
+            setExtendedState(JFrame.NORMAL);
+            isInTray = false;
+            tray.remove(trayIcon);
+            trayIcon.setImage(this.traySimple);
+        }
+    }
 }

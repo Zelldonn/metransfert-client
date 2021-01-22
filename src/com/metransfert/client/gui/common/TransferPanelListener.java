@@ -1,6 +1,6 @@
-package com.metransfert.client.gui.upload;
+package com.metransfert.client.gui.common;
 
-public interface PanelListener {
+public interface TransferPanelListener {
     void onClosedButtonClicked();
     void onPauseButtonClicked();
     void onStopButtonClicked();

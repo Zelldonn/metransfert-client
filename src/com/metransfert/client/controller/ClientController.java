@@ -1,5 +1,8 @@
 package com.metransfert.client.controller;
 
+import com.metransfer.common.PathsUtils;
+import com.metransfert.client.InstanceListener;
+import com.metransfert.client.ServerInstance;
 import com.metransfert.client.controller.exception.ConnectionFailedException;
 import com.metransfert.client.controller.transaction.Download;
 import com.metransfert.client.controller.transaction.Ping;
@@ -7,19 +10,17 @@ import com.metransfert.client.controller.transaction.RequestInfo;
 import com.metransfert.client.controller.transaction.Upload;
 import com.metransfert.client.gui.Gui;
 import com.metransfert.client.gui.GUIListener;
-import com.metransfert.client.gui.MyFileChooser;
-import com.metransfert.client.gui.Status;
-import com.metransfert.client.gui.download.DownloadPanel;
-import com.metransfert.client.gui.download.DownloadPanelListener;
-import com.metransfert.client.gui.download.DownloadTabListener;
+import com.metransfert.client.gui.common.MyFileChooser;
+import com.metransfert.client.gui.common.Status;
+import com.metransfert.client.gui.download.panel.DownloadPanel;
+import com.metransfert.client.gui.download.tab.DownloadTabListener;
 import com.metransfert.client.gui.upload.UploadPanel;
-import com.metransfert.client.gui.upload.PanelListener;
-import com.metransfert.client.gui.upload.UploadTabListener;
+import com.metransfert.client.gui.common.TransferPanelListener;
+import com.metransfert.client.gui.upload.tab.UploadTabListener;
 import com.metransfert.client.transactionhandlers.DownloadListener;
 import com.metransfert.client.transactionhandlers.RequestListener;
 import com.metransfert.client.transactionhandlers.TransferInfo;
 import com.metransfert.client.transactionhandlers.TransferListener;
-import com.metransfert.client.utils.Path;
 
 import javax.swing.*;
 import java.io.*;
@@ -27,9 +28,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import static com.metransfer.common.Ui.*;
+
 public class ClientController {
 
-    private static ClientController instance;
+    private static ServerInstance serverInstance;
 
     private final Gui gui;
 
@@ -45,9 +48,34 @@ public class ClientController {
 
     boolean canDownload = false;
 
+    private void handleArgs(String args[]){
+        if(args.length > 0){
+            if(args[0].equals("d")){
+                //This is from a right-click -> download
+                downloadPath = new File(args[1]).toPath();
+                gui.getDownloadTab().setPathTextField(args[1]);
+                gui.getTabbedPane().setSelectedIndex(1);
+            }
+            else{
+                //This is from a right-click -> upload
+                fileList = new File[args.length];
+                for(int i = 0 ; i < args.length; i++){
+                    //Populating fileList
+                    try{
+                        fileList[i] = new File(args[i]);
+                    }catch (NullPointerException e){
+                        fileList = null;
+                        break;
+                    }
+                    gui.getTabbedPane().setSelectedIndex(0);
+                }
+            }
+        }
+    }
+
     public ClientController(Gui g, ClientConfiguration config, String[] args) {
-        if(instance == null)
-            instance = this;
+        if(serverInstance == null)
+            serverInstance = ServerInstance.instance();
         else throw new RuntimeException("There cannot be more than one instance of MeTransfer client controller");
 
         this.address = config.getAddress();
@@ -55,22 +83,33 @@ public class ClientController {
         this.uploadPath = config.getUploadPath();
         this.downloadPath = config.getDownloadPath();
 
-        if(args.length >= 1){
-            //This is from a right-click -> upload
-            fileList = new File[args.length];
-            for(int i = 0 ; i < args.length; i++){
-                //Populating fileList
-                fileList[i] = new File(args[i]);
-                System.out.println(fileList[i]);
+        serverInstance.addServerInstanceListener(new InstanceListener() {
+            @Override
+            public void onNewInstance(String[] args) {
+                System.out.println("CLient controller has found new instance");
+                handleArgs(args);
+                java.awt.EventQueue.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        gui.removeFromTray();
+                        gui.toFront();
+                        gui.repaint();
+                    }
+                });
+
+                updateUploadTabInfo();
             }
-        }else{
-            this.fileList = null;
-        }
+        });
 
         gui = g;
         gui.setIpLabel(address.getIp());
         gui.setPortLabel(Integer.toString(address.getPort()));
         gui.setTheme(config.getTheme());
+
+        //Subscribe to an newInstanceListener which take args in parameters
+        this.fileList = null;
+
+        handleArgs(args);
 
         updateUploadTabInfo();
         ping();
@@ -166,7 +205,7 @@ public class ClientController {
             @Override
             public void onUploadButtonClicked() {
                 //TODO : Display a pop up to notify client if they are not connected ?
-                if(fileList != null){
+                if(fileList != null && calculateExpectedBytes(fileList) != 0){
                     doUpload();
                 }
             }
@@ -183,7 +222,7 @@ public class ClientController {
                             fileList = mfc.getSelectedFiles();
 
                             if(fileList.length == 1 && fileList[0].isDirectory()){
-                                fileList = fileList[0].listFiles(Path.withAtLeastOneFile);
+                                fileList = fileList[0].listFiles(PathsUtils.withAtLeastOneFile);
                             }
                             updateUploadTabInfo();
                         }
@@ -225,7 +264,7 @@ public class ClientController {
                                 gui.getDownloadTab().setFileInfoLabel("This ID is not valid");
                                 canDownload = false;
                             }else{
-                                gui.getDownloadTab().setFileInfoLabel(fileNumber +" file(s) ("+ com.metransfert.client.utils.Gui.byte2Readable(expectedBytes)+")");
+                                gui.getDownloadTab().setFileInfoLabel(fileNumber +" file(s) ("+ byte2Readable(expectedBytes)+")");
                                 setDownloadable(true);
                             }
                             gui.getDownloadTab().setFileInfoLabelVisible(true);
@@ -282,13 +321,18 @@ public class ClientController {
     }
 
     public void setDownloadable(boolean b){
-        gui.getDownloadTab().setIdTextField("");
-        if(!b)
-            gui.getDownloadTab().setDownloadButton("Show");
-        else
-            gui.getDownloadTab().setDownloadButton("Download");
-        canDownload = b;
-        gui.getDownloadTab().setFileInfoLabelVisible(b);
+        Runnable doThis = new Runnable() {
+            @Override
+            public void run() {
+                if(!b)
+                    gui.getDownloadTab().setDownloadButton("Show");
+                else
+                    gui.getDownloadTab().setDownloadButton("Download");
+                canDownload = b;
+                gui.getDownloadTab().setFileInfoLabelVisible(b);
+            }
+        };
+        SwingUtilities.invokeLater(doThis);
     }
 
     public void refreshGUI(){
@@ -300,7 +344,7 @@ public class ClientController {
      */
     public void updateUploadTabInfo(){
         if(fileList != null){
-            gui.getUploadTab().setFileInfoLabel(com.metransfert.client.utils.Gui.displayFileInfo(fileList));
+            gui.getUploadTab().setFileInfoLabel(displayFileInfo(fileList));
             gui.getUploadTab().getFileInfoLabel().setVisible(true);
         }else{
             gui.getUploadTab().getFileInfoLabel().setVisible(false);
@@ -310,14 +354,16 @@ public class ClientController {
     private void doDownload(){
         Download dl = new Download(downloadPath, requestedID);
         DownloadPanel p = new DownloadPanel(downloadPath);
-        p.addDownloadPanelListeners(new DownloadPanelListener() {
-            @Override
-            public void onOpenDownloadPathClicked() {
-                //TODO : try to open the true windows explorer
-            }
-
+        p.addPanelListener(new TransferPanelListener() {
             @Override
             public void onClosedButtonClicked() {
+                if(dl.isRunning()) {
+                    try {
+                        dl.endTransaction();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
                 gui.getDownloadTab().remove(p);
                 gui.getDownloadTab().refreshPanel();
             }
@@ -339,24 +385,42 @@ public class ClientController {
                 p.getProgressBar().setVisible(false);
                 p.getPauseButton().setVisible(false);
                 p.getStopButton().setVisible(false);
-                gui.getDownloadTab().refreshPanel();
                 p.getFileInfoLabel().setText("Files saved in "+downloadPath);
                 p.getFileInfoLabel().setVisible(true);
-                setDownloadable(false);
+
+                gui.setNotificationToTray();
+                gui.setTrayIconText("MeTransfer");
+                gui.getDownloadTab().setIdTextField("");
+
+                gui.getDownloadTab().refreshPanel();
             }
 
             @Override
             public void onTransferUpdate(TransferInfo info) {
                 float percentage = ((float)info.transferredBytes/(float)info.expectedBytes) * 100F;
-                long throughput = 0;
+                long throughput = calculateThroughput(info.transferredBytes, p.getOldTransferredBytes(), p.getOldTime());
+                p.count++;
+                p.throughputSum += throughput;
+
+                if(p.count == 50){
+                    p.throughputAverage = p.throughputSum/p.count;
+                    p.throughputSum = 0;
+                    p.count = 0;
+                }
+
+                p.setOldTime(System.currentTimeMillis());
+                p.setOldTransferredBytes(info.transferredBytes);
+
                 p.setProgressBarValue((int)percentage);
-                p.setProgressBarText(com.metransfert.client.utils.Gui.byte2Readable(throughput) + "/s");
+                p.setProgressBarText(String.format("%.1f",percentage)+" % (" + byte2Readable(p.throughputAverage) + "/s)");
+
+                gui.setTrayIconText(String.format("%.1f",percentage)+" %");
                 gui.getDownloadTab().refreshPanel();
             }
 
             @Override
             public void onTransactionStart() {
-
+                setDownloadable(false);
             }
 
             @Override
@@ -375,10 +439,17 @@ public class ClientController {
     private void doUpload(){
         Upload up = new Upload(fileList);
         UploadPanel p = new UploadPanel();
-        p.addPanelListener(new PanelListener() {
+        p.addPanelListener(new TransferPanelListener() {
             @Override
             public void onClosedButtonClicked() {
                 //TODO : verify if there is no more thing to clean ?
+                if(up.isRunning()) {
+                    try {
+                        up.endTransaction();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
                 gui.getUploadTab().remove(p);
                 gui.getUploadTab().refreshPanel();
             }
@@ -400,9 +471,24 @@ public class ClientController {
             @Override
             public void onTransferUpdate(TransferInfo info) {
                 float percentage = ((float)info.transferredBytes/(float)info.expectedBytes) * 100F;
-                long throughput = 0;
+                long throughput = calculateThroughput(info.transferredBytes, p.getOldTransferredBytes(), p.getOldTime());
+
+                p.count++;
+                p.throughputSum += throughput;
+
+                if(p.count == 50){
+                    p.throughputAverage = p.throughputSum/p.count;
+                    p.throughputSum = 0;
+                    p.count = 0;
+                }
+
+                p.setOldTime(System.currentTimeMillis());
+                p.setOldTransferredBytes(info.transferredBytes);
+
                 p.setProgressBarValue((int)percentage);
-                p.setProgressBarText(com.metransfert.client.utils.Gui.byte2Readable(throughput) + "/s");
+                p.setProgressBarText(String.format("%.1f",percentage)+" % (" + byte2Readable(p.throughputAverage) + "/s)");
+
+                gui.setTrayIconText(String.format("%.1f",percentage)+" %");
                 gui.getUploadTab().refreshPanel();
             }
 
@@ -418,6 +504,9 @@ public class ClientController {
                 p.getProgressBar().setVisible(false);
                 p.getPauseButton().setVisible(false);
                 p.getStopButton().setVisible(false);
+
+                gui.setTrayIconText("MeTransfer");
+                gui.setNotificationToTray();
                 gui.getUploadTab().refreshPanel();
             }
         });

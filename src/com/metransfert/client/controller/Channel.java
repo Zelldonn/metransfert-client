@@ -2,12 +2,10 @@ package com.metransfert.client.controller;
 
 import com.metransfert.client.controller.exception.ConnectionFailedException;
 import com.metransfert.client.controller.transaction.Transaction;
-import com.metransfert.client.gui.Status;
-import com.metransfert.client.transactionhandlers.PingListener;
+import com.metransfert.client.gui.common.Status;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
 
 public class Channel implements Runnable{
 

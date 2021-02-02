@@ -76,6 +76,7 @@ public class Download extends Transfer{
                     for(DownloadListener l :downloadListeners)
                         l.onTransferUpdate(new TransferInfo(expectedBytes, transferredBytes, 0L));
                 }
+                fos.close();
             }else if(pathType == TransactionType.DIRECTORY){
                 //System.out.println("Directory received");
                 long DirectoryNameLength = dis.readLong();

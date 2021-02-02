@@ -59,6 +59,7 @@ public class Upload extends Transfer{
                         listener.onTransferUpdate(new TransferInfo(getExpectedBytes(), getTransferredBytes(), 0L));
                     }
                 }
+                fis.close();
                 bos.flush();
             }else{
                 //System.out.print(" and it is a directory");
